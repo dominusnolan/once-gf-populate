@@ -158,13 +158,13 @@ add_shortcode( 'once_gf_states', function () {
 add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( ! is_admin() ) {
 		$script_url = plugin_dir_url( __FILE__ ) . 'once-gf-populate.js';
-		$cache_buster = '?v=' . time();
+		$script_version = filemtime( plugin_dir_path( __FILE__ ) . 'once-gf-populate.js' );
 		
 		wp_enqueue_script(
 			'once-gf-populate-ajax',
-			$script_url . $cache_buster,
+			$script_url,
 			array( 'jquery' ),
-			null,
+			$script_version,
 			true
 		);
 
@@ -189,9 +189,6 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 function once_gf_populate_ajax_get_stores() {
 	// Set no-cache headers
 	nocache_headers();
-	header( 'Cache-Control: no-cache, no-store, must-revalidate, max-age=0' );
-	header( 'Pragma: no-cache' );
-	header( 'Expires: 0' );
 
 	// Verify nonce
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'once_gf_populate_nonce' ) ) {

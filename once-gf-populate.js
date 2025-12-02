@@ -78,7 +78,7 @@
 			var cacheBuster = new Date().getTime();
 
 			$.ajax({
-				url: config.ajaxUrl + '?cachebust=' + cacheBuster,
+				url: config.ajaxUrl,
 				type: 'POST',
 				data: {
 					action: 'once_gf_populate_get_stores',
@@ -87,11 +87,6 @@
 					_: cacheBuster
 				},
 				cache: false,
-				headers: {
-					'Cache-Control': 'no-cache, no-store, must-revalidate',
-					'Pragma': 'no-cache',
-					'Expires': '0'
-				},
 				success: function (response) {
 					if (response.success && response.data && response.data.choices) {
 						updateStoreField(response.data.choices);
