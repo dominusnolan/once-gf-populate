@@ -21,6 +21,7 @@ define( 'ONCE_GF_POPULATE_FIELD_ID', 32 );
 define( 'ONCE_GF_POPULATE_STORE_NAME_FIELD_ID', 7 );
 define( 'ONCE_GF_POPULATE_CPT', 'retail_customers' );
 define( 'ONCE_GF_POPULATE_ACF_FIELD', 'state' );
+define( 'ONCE_GF_POPULATE_MAX_STORES', 500 );
 
 /**
  * Fetch unique state values from CPT retail_customers via ACF/meta.
@@ -159,7 +160,8 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 	if ( ! is_admin() ) {
 		$script_url = plugin_dir_url( __FILE__ ) . 'once-gf-populate.js';
 		$script_path = plugin_dir_path( __FILE__ ) . 'once-gf-populate.js';
-		$script_version = file_exists( $script_path ) ? filemtime( $script_path ) : '1.0.0';
+		$script_mtime = file_exists( $script_path ) ? filemtime( $script_path ) : false;
+		$script_version = ( false !== $script_mtime ) ? $script_mtime : '1.0.0';
 		
 		wp_enqueue_script(
 			'once-gf-populate-ajax',
@@ -214,7 +216,7 @@ function once_gf_populate_ajax_get_stores() {
 	$args = array(
 		'post_type'      => ONCE_GF_POPULATE_CPT,
 		'post_status'    => 'publish',
-		'posts_per_page' => 500,
+		'posts_per_page' => ONCE_GF_POPULATE_MAX_STORES,
 		'orderby'        => 'title',
 		'order'          => 'ASC',
 		'meta_query'     => array(

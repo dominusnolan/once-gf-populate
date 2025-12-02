@@ -104,19 +104,6 @@
 			var selectedState = $(this).val();
 			fetchStores(selectedState);
 		});
-
-		// Also listen for Gravity Forms field change event
-		$(document).on('gform_post_conditional_logic', function (event, formId, fields, isInit) {
-			if (parseInt(formId) === parseInt(config.formId)) {
-				var $stateField = $(stateFieldSelector);
-				if ($stateField.length > 0) {
-					var selectedState = $stateField.val();
-					if (selectedState) {
-						fetchStores(selectedState);
-					}
-				}
-			}
-		});
 	});
 
 })(jQuery);
