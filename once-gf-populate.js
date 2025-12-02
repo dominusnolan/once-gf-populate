@@ -74,17 +74,13 @@
 				return;
 			}
 
-			// Add cache-busting parameter
-			var cacheBuster = new Date().getTime();
-
 			$.ajax({
 				url: config.ajaxUrl,
 				type: 'POST',
 				data: {
 					action: 'once_gf_populate_get_stores',
 					nonce: config.nonce,
-					state: state,
-					_: cacheBuster
+					state: state
 				},
 				cache: false,
 				success: function (response) {

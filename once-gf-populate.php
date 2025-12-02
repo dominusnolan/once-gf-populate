@@ -158,7 +158,8 @@ add_shortcode( 'once_gf_states', function () {
 add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( ! is_admin() ) {
 		$script_url = plugin_dir_url( __FILE__ ) . 'once-gf-populate.js';
-		$script_version = filemtime( plugin_dir_path( __FILE__ ) . 'once-gf-populate.js' );
+		$script_path = plugin_dir_path( __FILE__ ) . 'once-gf-populate.js';
+		$script_version = file_exists( $script_path ) ? filemtime( $script_path ) : '1.0.0';
 		
 		wp_enqueue_script(
 			'once-gf-populate-ajax',
@@ -213,7 +214,7 @@ function once_gf_populate_ajax_get_stores() {
 	$args = array(
 		'post_type'      => ONCE_GF_POPULATE_CPT,
 		'post_status'    => 'publish',
-		'posts_per_page' => -1,
+		'posts_per_page' => 500,
 		'orderby'        => 'title',
 		'order'          => 'ASC',
 		'meta_query'     => array(
