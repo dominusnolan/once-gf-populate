@@ -1,0 +1,14 @@
+# WordPress plugin development ignores
+.DS_Store
+Thumbs.db
+node_modules/
+vendor/
+composer.lock
+
+# IDE/editor
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log

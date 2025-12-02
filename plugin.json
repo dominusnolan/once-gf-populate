@@ -1,0 +1,8 @@
+{
+  "name": "once-gf-populate",
+  "version": "1.0.0",
+  "description": "Populate Gravity Forms drop-down choices from CPT retail_customers using ACF field 'state'.",
+  "author": "Once",
+  "homepage": "https://onceinteractive.com",
+  "license": "GPL-2.0-or-later"
+}
