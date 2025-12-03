@@ -379,7 +379,7 @@ function once_gf_populate_ajax_get_brands() {
 	foreach ( array_keys( $brand_names ) as $brand_name ) {
 		$choices[] = array(
 			'value' => $brand_name,
-			'text'  => $brand_name,
+			'text'  => html_entity_decode( $brand_name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 		);
 	}
 
@@ -451,7 +451,7 @@ function once_gf_populate_ajax_get_forms() {
 	foreach ( array_keys( $form_terms ) as $form_name ) {
 		$choices[] = array(
 			'value' => $form_name,
-			'text'  => $form_name,
+			'text'  => html_entity_decode( $form_name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 		);
 	}
 	wp_send_json_success( array( 'choices' => $choices ) );
@@ -536,7 +536,7 @@ function once_gf_populate_ajax_get_product_types() {
 	foreach ( array_keys( $type_names ) as $type_name ) {
 		$choices[] = array(
 			'value' => $type_name,
-			'text'  => $type_name,
+			'text'  => html_entity_decode( $type_name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 		);
 	}
 
@@ -630,7 +630,7 @@ function once_gf_populate_ajax_get_product_details() {
 	foreach ( array_keys( $details_names ) as $detail_name ) {
 		$choices[] = array(
 			'value' => $detail_name,
-			'text'  => $detail_name,
+			'text'  => html_entity_decode( $detail_name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 		);
 	}
 
@@ -691,7 +691,7 @@ function once_gf_populate_ajax_get_manufactured_by() {
 				if ( ! empty( $mfg ) ) {
 					$choices[] = array(
 						'value' => $mfg,
-						'text'  => $mfg,
+						'text'  => html_entity_decode( $mfg, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 					);
 				}
 			}
@@ -706,7 +706,7 @@ function once_gf_populate_ajax_get_manufactured_by() {
 				if ( ! empty( $mfg ) ) {
 					$choices[] = array(
 						'value' => $mfg,
-						'text'  => $mfg,
+						'text'  => html_entity_decode( $mfg, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 					);
 				}
 			}
@@ -769,7 +769,7 @@ function once_gf_populate_ajax_get_return_reason() {
 				if ( ! empty( $reason ) ) {
 					$choices[] = array(
 						'value' => $reason,
-						'text'  => $reason,
+						'text'  => html_entity_decode( $reason, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 					);
 				}
 			}
@@ -784,7 +784,7 @@ function once_gf_populate_ajax_get_return_reason() {
 				if ( ! empty( $reason ) ) {
 					$choices[] = array(
 						'value' => $reason,
-						'text'  => $reason,
+						'text'  => html_entity_decode( $reason, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
 					);
 				}
 			}
