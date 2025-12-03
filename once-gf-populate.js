@@ -1,12 +1,109 @@
 /**
- * NOTE: This JavaScript file is no longer used.
- * The AJAX functionality has been moved to inline script in once-gf-populate.php
- * to bypass caching layers and ensure dynamic, non-cached AJAX population.
- * 
- * The inline script now handles:
- * - Store Name field (ID: 7) population from retail_customers CPT
- * - Brand field (ID: 10) population from products CPT via product_brand taxonomy
- * - Both fields are populated dynamically when State field (ID: 32) changes
- * 
- * This file is kept for reference only.
+ * Frontend AJAX handler for Store Name field population.
+ * Listens to State field changes and updates Store Name dropdown via AJAX.
  */
+(function ($) {
+	'use strict';
+
+	/**
+	 * Initialize the AJAX population when document is ready.
+	 */
+	$(document).ready(function () {
+		// Ensure the configuration is available
+		if (typeof onceGfPopulate === 'undefined') {
+			return;
+		}
+
+		var config = onceGfPopulate;
+		var formId = config.formId;
+		var stateFieldId = config.stateFieldId;
+		var storeFieldId = config.storeFieldId;
+
+		// Construct field selectors for Gravity Forms
+		var stateFieldSelector = '#input_' + formId + '_' + stateFieldId;
+		var storeFieldSelector = '#input_' + formId + '_' + storeFieldId;
+
+		/**
+		 * Update Store Name dropdown with new choices.
+		 *
+		 * @param {Array} choices Array of choice objects with value and text properties.
+		 */
+		function updateStoreField(choices) {
+			var $storeField = $(storeFieldSelector);
+			
+			if ($storeField.length === 0) {
+				return;
+			}
+
+			// Clear existing options
+			$storeField.empty();
+
+			// Add placeholder option
+			$storeField.append(
+				$('<option>', {
+					value: '',
+					text: 'Please Select'
+				})
+			);
+
+			// Add store options
+			if (choices && choices.length > 0) {
+				$.each(choices, function (index, choice) {
+					$storeField.append(
+						$('<option>', {
+							value: choice.value,
+							text: choice.text
+						})
+					);
+				});
+			}
+
+			// Trigger change event to update Gravity Forms
+			$storeField.trigger('change');
+		}
+
+		/**
+		 * Fetch stores for the selected state via AJAX.
+		 *
+		 * @param {string} state The selected state value.
+		 */
+		function fetchStores(state) {
+			if (!state) {
+				// If no state selected, reset to placeholder only
+				updateStoreField([]);
+				return;
+			}
+
+			$.ajax({
+				url: config.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'once_gf_populate_get_stores',
+					nonce: config.nonce,
+					state: state
+				},
+				cache: false,
+				success: function (response) {
+					if (response.success && response.data && response.data.choices) {
+						updateStoreField(response.data.choices);
+					} else {
+						updateStoreField([]);
+					}
+				},
+				error: function () {
+					// On error, reset to placeholder
+					updateStoreField([]);
+				}
+			});
+		}
+
+		/**
+		 * Attach change event listener to State field.
+		 */
+		$(document).on('change', stateFieldSelector, function () {
+			var selectedState = $(this).val();
+			fetchStores(selectedState);
+		});
+	});
+
+})(jQuery);
