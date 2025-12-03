@@ -550,12 +550,21 @@
 
 	$(document).on('change', stateFieldSelector, function () {
 			var selectedState = $(this).val();
-			var selectedBrand = $(brandFieldSelector).val();
-			var selectedForm = $(formFieldSelector).val();
-			fetchStores(selectedState);
-			fetchBrands(selectedState);
-			fetchManufacturedBy(selectedState);
-			fetchForms(selectedBrand, selectedState);
+			$(this).data('selected', selectedState);
+			
+			var selectedBrand = $(brandFieldSelector).data('selected') || $(brandFieldSelector).val();
+			var selectedForm = $(formFieldSelector).data('selected') || $(formFieldSelector).val();
+			
+			fetchStores(selectedState, $(storeFieldSelector).data('selected'));
+			fetchBrands(selectedState, selectedBrand);
+			fetchManufacturedBy(selectedState, $(manufacturedByFieldSelector).data('selected'));
+			
+			if (selectedBrand) {
+				fetchForms(selectedBrand, selectedState, selectedForm);
+			} else {
+				updateFormField([]);
+			}
+			
 			updateProductTypeField([]); // Reset Product Type
 			updateProductDetailsField([]); // Reset Product Details
 			updateReturnReasonField([]); // Reset Return Reason
@@ -563,9 +572,12 @@
 
 		$(document).on('change', brandFieldSelector, function () {
 			var selectedBrand = $(this).val();
+			$(this).data('selected', selectedBrand);
+			
 			var selectedState = $(stateFieldSelector).val();
-			var selectedForm = $(formFieldSelector).val();
-			fetchForms(selectedBrand, selectedState);
+			var selectedForm = $(formFieldSelector).data('selected') || $(formFieldSelector).val();
+			
+			fetchForms(selectedBrand, selectedState, selectedForm);
 			updateProductTypeField([]); // Reset Product Type
 			updateProductDetailsField([]); // Reset Product Details
 			updateReturnReasonField([]); // Reset Return Reason
@@ -574,20 +586,28 @@
 		// When "Form" changes, update Product Type and Return Reason
 		$(document).on('change', formFieldSelector, function () {
 			var selectedForm = $(this).val();
+			$(this).data('selected', selectedForm);
+			
 			var selectedState = $(stateFieldSelector).val();
 			var selectedBrand = $(brandFieldSelector).val();
-			fetchProductTypes(selectedBrand, selectedState, selectedForm);
-			fetchReturnReason(selectedForm);
+			var selectedProductType = $(productTypeFieldSelector).data('selected') || $(productTypeFieldSelector).val();
+			
+			fetchProductTypes(selectedBrand, selectedState, selectedForm, selectedProductType);
+			fetchReturnReason(selectedForm, $(returnReasonFieldSelector).data('selected'));
 			updateProductDetailsField([]); // Reset Product Details
 		});
 
 		// When "Product Type" changes, update Product Details
 		$(document).on('change', productTypeFieldSelector, function () {
 			var selectedProductType = $(this).val();
+			$(this).data('selected', selectedProductType);
+			
 			var selectedState = $(stateFieldSelector).val();
 			var selectedBrand = $(brandFieldSelector).val();
 			var selectedForm = $(formFieldSelector).val();
-			fetchProductDetails(selectedBrand, selectedState, selectedForm, selectedProductType);
+			var selectedProductDetails = $(productDetailsFieldSelector).data('selected') || $(productDetailsFieldSelector).val();
+			
+			fetchProductDetails(selectedBrand, selectedState, selectedForm, selectedProductType, selectedProductDetails);
 		});
 	});
 })(jQuery);
