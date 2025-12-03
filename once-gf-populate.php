@@ -28,6 +28,8 @@ define( 'ONCE_GF_POPULATE_BRAND_FIELD_ID', 10 );
 define( 'ONCE_GF_POPULATE_FORM_FIELD_ID', 11 );
 define( 'ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID', 12 );
 define( 'ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID', 13 );
+define( 'ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID', 18 );
+define( 'ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID', 39 );
 define( 'ONCE_GF_POPULATE_PRODUCTS_CPT', 'products' );
 define( 'ONCE_GF_POPULATE_PRODUCT_STATE_ACF', 'product_state' );
 define( 'ONCE_GF_POPULATE_PRODUCT_BRAND_TAX', 'product_brand' );
@@ -197,6 +199,8 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 				'formFieldId'    => ONCE_GF_POPULATE_FORM_FIELD_ID,
 				'productTypeFieldId' => ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID,
 				'productDetailsFieldId' => ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID,
+				'manufacturedByFieldId' => ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID,
+				'returnReasonFieldId' => ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID,
 			)
 		);
 	}
@@ -600,7 +604,170 @@ add_action( 'wp_ajax_once_gf_populate_get_product_details', 'once_gf_populate_aj
 add_action( 'wp_ajax_nopriv_once_gf_populate_get_product_details', 'once_gf_populate_ajax_get_product_details' );
 
 /**
- * Initialize Store Name, Brand, Form, Product Type, and Product Details fields with placeholder on form render
+ * AJAX handler to fetch manufactured by values from products CPT filtered by state.
+ * Extracts unique values from ACF field 'state_mfg' for products matching the selected state via product_state taxonomy.
+ */
+function once_gf_populate_ajax_get_manufactured_by() {
+	nocache_headers();
+
+	// Security check
+	if (
+		! isset( $_POST['nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'once_gf_populate_nonce' )
+	) {
+		wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+		return;
+	}
+
+	$state = isset( $_POST['state'] ) ? sanitize_text_field( wp_unslash( $_POST['state'] ) ) : '';
+
+	if ( empty( $state ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Get term object for product_state taxonomy
+	$state_term = get_term_by( 'name', $state, ONCE_GF_POPULATE_PRODUCT_STATE_ACF );
+	if ( ! $state_term || is_wp_error( $state_term ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Query products that have this state
+	$args = array(
+		'post_type'      => ONCE_GF_POPULATE_PRODUCTS_CPT,
+		'post_status'    => 'publish',
+		'posts_per_page' => ONCE_GF_POPULATE_MAX_PRODUCTS,
+		'tax_query'      => array(
+			array(
+				'taxonomy' => ONCE_GF_POPULATE_PRODUCT_STATE_ACF,
+				'field'    => 'term_id',
+				'terms'    => $state_term->term_id,
+			),
+		),
+		'fields' => 'ids',
+	);
+
+	$query = new WP_Query( $args );
+	$manufactured_by_values = array();
+
+	if ( $query->have_posts() ) {
+		foreach ( $query->posts as $product_id ) {
+			$state_mfg = null;
+
+			if ( function_exists( 'get_field' ) ) {
+				$state_mfg = get_field( 'state_mfg', $product_id );
+			}
+
+			if ( ! $state_mfg ) {
+				$state_mfg = get_post_meta( $product_id, 'state_mfg', true );
+			}
+
+			if ( is_string( $state_mfg ) ) {
+				$state_mfg = trim( $state_mfg );
+			}
+
+			if ( ! empty( $state_mfg ) && is_string( $state_mfg ) ) {
+				$manufactured_by_values[ $state_mfg ] = true;
+			}
+		}
+	}
+
+	wp_reset_postdata();
+
+	$choices = array();
+	foreach ( array_keys( $manufactured_by_values ) as $mfg_value ) {
+		$choices[] = array(
+			'value' => $mfg_value,
+			'text'  => $mfg_value,
+		);
+	}
+
+	wp_send_json_success( array( 'choices' => $choices ) );
+}
+add_action( 'wp_ajax_once_gf_populate_get_manufactured_by', 'once_gf_populate_ajax_get_manufactured_by' );
+add_action( 'wp_ajax_nopriv_once_gf_populate_get_manufactured_by', 'once_gf_populate_ajax_get_manufactured_by' );
+
+/**
+ * AJAX handler to fetch return reason values from product_form taxonomy term.
+ * Extracts ACF field 'return_reason' from the taxonomy term matching the selected Form value.
+ */
+function once_gf_populate_ajax_get_return_reason() {
+	nocache_headers();
+
+	// Security check
+	if (
+		! isset( $_POST['nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'once_gf_populate_nonce' )
+	) {
+		wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+		return;
+	}
+
+	$form = isset( $_POST['form'] ) ? sanitize_text_field( wp_unslash( $_POST['form'] ) ) : '';
+
+	if ( empty( $form ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Get term object for product_form taxonomy
+	$form_term = get_term_by( 'name', $form, ONCE_GF_POPULATE_PRODUCT_FORM_TAX );
+	if ( ! $form_term || is_wp_error( $form_term ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Get return_reason ACF field from the taxonomy term
+	$return_reason = null;
+
+	if ( function_exists( 'get_field' ) ) {
+		$return_reason = get_field( 'return_reason', ONCE_GF_POPULATE_PRODUCT_FORM_TAX . '_' . $form_term->term_id );
+	}
+
+	if ( ! $return_reason ) {
+		$return_reason = get_term_meta( $form_term->term_id, 'return_reason', true );
+	}
+
+	$choices = array();
+
+	// Handle return_reason as array or string
+	if ( is_array( $return_reason ) && ! empty( $return_reason ) ) {
+		foreach ( $return_reason as $reason ) {
+			if ( is_string( $reason ) ) {
+				$reason = trim( $reason );
+				if ( ! empty( $reason ) ) {
+					$choices[] = array(
+						'value' => $reason,
+						'text'  => $reason,
+					);
+				}
+			}
+		}
+	} elseif ( is_string( $return_reason ) ) {
+		$return_reason = trim( $return_reason );
+		if ( ! empty( $return_reason ) ) {
+			// Split by newlines or commas if it's a delimited string
+			$reasons = preg_split( '/[\r\n,]+/', $return_reason );
+			foreach ( $reasons as $reason ) {
+				$reason = trim( $reason );
+				if ( ! empty( $reason ) ) {
+					$choices[] = array(
+						'value' => $reason,
+						'text'  => $reason,
+					);
+				}
+			}
+		}
+	}
+
+	wp_send_json_success( array( 'choices' => $choices ) );
+}
+add_action( 'wp_ajax_once_gf_populate_get_return_reason', 'once_gf_populate_ajax_get_return_reason' );
+add_action( 'wp_ajax_nopriv_once_gf_populate_get_return_reason', 'once_gf_populate_ajax_get_return_reason' );
+
+/**
+ * Initialize Store Name, Brand, Form, Product Type, Product Details, Manufactured By, and Return Reason fields with placeholder on form render
  */
 add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( empty( $form['fields'] ) || ! is_array( $form['fields'] ) ) return $form;
@@ -611,6 +778,8 @@ add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_FORM_FIELD_ID )
 			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID )
 			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID )
+			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID )
+			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID )
 		) {
 			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
 				$field->choices = array(
