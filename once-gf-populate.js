@@ -60,7 +60,7 @@
 			}
 			
 			// Restore previous value if it exists in the new choices (compare as strings for post IDs)
-			if (previousValue && previousValue !== '' && $storeField.find('option[value="' + previousValue + '"]').length > 0) {
+			if (previousValue && $storeField.find('option[value="' + previousValue + '"]').length > 0) {
 				$storeField.val(previousValue);
 				$storeField.data('selected', previousValue);
 			} else {
@@ -94,7 +94,7 @@
 			}
 			
 			// Restore previous value if it exists in the new choices (taxonomy name/slug comparison)
-			if (previousValue && previousValue !== '' && $brandField.find('option[value="' + previousValue + '"]').length > 0) {
+			if (previousValue && $brandField.find('option[value="' + previousValue + '"]').length > 0) {
 				$brandField.val(previousValue);
 				$brandField.data('selected', previousValue);
 			} else {
@@ -128,7 +128,7 @@
 			}
 			
 			// Restore previous value if it exists in the new choices (taxonomy name/slug comparison)
-			if (previousValue && previousValue !== '' && $formField.find('option[value="' + previousValue + '"]').length > 0) {
+			if (previousValue && $formField.find('option[value="' + previousValue + '"]').length > 0) {
 				$formField.val(previousValue);
 				$formField.data('selected', previousValue);
 			} else {
@@ -162,7 +162,7 @@
 			}
 			
 			// Restore previous value if it exists in the new choices (taxonomy name/slug comparison)
-			if (previousValue && previousValue !== '' && $productTypeField.find('option[value="' + previousValue + '"]').length > 0) {
+			if (previousValue && $productTypeField.find('option[value="' + previousValue + '"]').length > 0) {
 				$productTypeField.val(previousValue);
 				$productTypeField.data('selected', previousValue);
 			} else {
@@ -196,7 +196,7 @@
 			}
 			
 			// Restore previous value if it exists in the new choices (taxonomy name/slug comparison)
-			if (previousValue && previousValue !== '' && $productDetailsField.find('option[value="' + previousValue + '"]').length > 0) {
+			if (previousValue && $productDetailsField.find('option[value="' + previousValue + '"]').length > 0) {
 				$productDetailsField.val(previousValue);
 				$productDetailsField.data('selected', previousValue);
 			} else {
@@ -230,7 +230,7 @@
 			}
 			
 			// Restore previous value if it exists in the new choices
-			if (previousValue && previousValue !== '' && $manufacturedByField.find('option[value="' + previousValue + '"]').length > 0) {
+			if (previousValue && $manufacturedByField.find('option[value="' + previousValue + '"]').length > 0) {
 				$manufacturedByField.val(previousValue);
 				$manufacturedByField.data('selected', previousValue);
 			} else {
@@ -264,7 +264,7 @@
 			}
 			
 			// Restore previous value if it exists in the new choices
-			if (previousValue && previousValue !== '' && $returnReasonField.find('option[value="' + previousValue + '"]').length > 0) {
+			if (previousValue && $returnReasonField.find('option[value="' + previousValue + '"]').length > 0) {
 				$returnReasonField.val(previousValue);
 				$returnReasonField.data('selected', previousValue);
 			} else {
@@ -508,30 +508,56 @@
 		var $manufacturedByField = $(manufacturedByFieldSelector);
 		var $returnReasonField = $(returnReasonFieldSelector);
 
-		if ($stateField.length && $stateField.val()) {
-			$stateField.data('selected', $stateField.val());
+		var stateVal, storeVal, brandVal, formVal, productTypeVal, productDetailsVal, manufacturedByVal, returnReasonVal;
+
+		if ($stateField.length) {
+			stateVal = $stateField.val();
+			if (stateVal) {
+				$stateField.data('selected', stateVal);
+			}
 		}
 		// For AJAX fields, store the selected value if it exists (non-empty and not placeholder)
-		if ($storeField.length && $storeField.val() && $storeField.val() !== '') {
-			$storeField.data('selected', $storeField.val());
+		if ($storeField.length) {
+			storeVal = $storeField.val();
+			if (storeVal) {
+				$storeField.data('selected', storeVal);
+			}
 		}
-		if ($brandField.length && $brandField.val() && $brandField.val() !== '') {
-			$brandField.data('selected', $brandField.val());
+		if ($brandField.length) {
+			brandVal = $brandField.val();
+			if (brandVal) {
+				$brandField.data('selected', brandVal);
+			}
 		}
-		if ($formField.length && $formField.val() && $formField.val() !== '') {
-			$formField.data('selected', $formField.val());
+		if ($formField.length) {
+			formVal = $formField.val();
+			if (formVal) {
+				$formField.data('selected', formVal);
+			}
 		}
-		if ($productTypeField.length && $productTypeField.val() && $productTypeField.val() !== '') {
-			$productTypeField.data('selected', $productTypeField.val());
+		if ($productTypeField.length) {
+			productTypeVal = $productTypeField.val();
+			if (productTypeVal) {
+				$productTypeField.data('selected', productTypeVal);
+			}
 		}
-		if ($productDetailsField.length && $productDetailsField.val() && $productDetailsField.val() !== '') {
-			$productDetailsField.data('selected', $productDetailsField.val());
+		if ($productDetailsField.length) {
+			productDetailsVal = $productDetailsField.val();
+			if (productDetailsVal) {
+				$productDetailsField.data('selected', productDetailsVal);
+			}
 		}
-		if ($manufacturedByField.length && $manufacturedByField.val() && $manufacturedByField.val() !== '') {
-			$manufacturedByField.data('selected', $manufacturedByField.val());
+		if ($manufacturedByField.length) {
+			manufacturedByVal = $manufacturedByField.val();
+			if (manufacturedByVal) {
+				$manufacturedByField.data('selected', manufacturedByVal);
+			}
 		}
-		if ($returnReasonField.length && $returnReasonField.val() && $returnReasonField.val() !== '') {
-			$returnReasonField.data('selected', $returnReasonField.val());
+		if ($returnReasonField.length) {
+			returnReasonVal = $returnReasonField.val();
+			if (returnReasonVal) {
+				$returnReasonField.data('selected', returnReasonVal);
+			}
 		}
 	}
 
