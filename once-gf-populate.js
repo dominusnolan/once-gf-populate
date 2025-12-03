@@ -1,6 +1,6 @@
 /**
- * Frontend AJAX handler for Store Name field population.
- * Listens to State field changes and updates Store Name dropdown via AJAX.
+ * Frontend AJAX handler for Brand field population.
+ * Listens to State field changes and updates Brand dropdown via AJAX.
  */
 (function ($) {
 	'use strict';
@@ -24,7 +24,7 @@
 		var storeFieldSelector = '#input_' + formId + '_' + storeFieldId;
 
 		/**
-		 * Update Store Name dropdown with new choices.
+		 * Update Brand dropdown with new choices.
 		 *
 		 * @param {Array} choices Array of choice objects with value and text properties.
 		 */
@@ -46,7 +46,7 @@
 				})
 			);
 
-			// Add store options
+			// Add brand options
 			if (choices && choices.length > 0) {
 				$.each(choices, function (index, choice) {
 					$storeField.append(
@@ -63,7 +63,7 @@
 		}
 
 		/**
-		 * Fetch stores for the selected state via AJAX.
+		 * Fetch brands for the selected state via AJAX.
 		 *
 		 * @param {string} state The selected state value.
 		 */
