@@ -82,6 +82,29 @@
 			return selections[fieldId] || '';
 		}
 
+		/**
+		 * Check if there are any saved selections
+		 */
+		function hasSavedSelections(selections) {
+			for (var key in selections) {
+				if (selections.hasOwnProperty(key) && selections[key]) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/**
+		 * Check if we're on a form submission confirmation page
+		 */
+		function isFormSubmissionConfirmationPage() {
+			var search = window.location.search;
+			var referrer = document.referrer || '';
+			return search.indexOf('gf_page=preview') === -1 && 
+			       (search.indexOf('gform_confirmation') !== -1 || 
+			        referrer.indexOf('gform_confirmation') !== -1);
+		}
+
 		function showLoading($field) {
 			if ($field.length === 0) return;
 			$field.prop('disabled', true);
@@ -679,7 +702,17 @@
 		var stateVal = $stateField.val();
 
 		// Only restore if we have a state value and at least one saved selection
-		if (stateVal && (savedStore || savedBrand || savedForm || savedProductType || savedProductDetails || savedManufacturedBy || savedReturnReason)) {
+		var savedSelections = {
+			store: savedStore,
+			brand: savedBrand,
+			form: savedForm,
+			productType: savedProductType,
+			productDetails: savedProductDetails,
+			manufacturedBy: savedManufacturedBy,
+			returnReason: savedReturnReason
+		};
+		
+		if (stateVal && hasSavedSelections(savedSelections)) {
 			// Store the saved values in data attributes for preservation
 			if (savedStore) $storeField.data('selected', savedStore);
 			if (savedBrand) $brandField.data('selected', savedBrand);
@@ -791,14 +824,17 @@
 			$(manufacturedByFieldSelector).data('selected', '');
 			$(returnReasonFieldSelector).data('selected', '');
 			
-			// Clear dependent field selections from localStorage
-			saveFieldValue(storeFieldId, '');
-			saveFieldValue(brandFieldId, '');
-			saveFieldValue(formFieldId, '');
-			saveFieldValue(productTypeFieldId, '');
-			saveFieldValue(productDetailsFieldId, '');
-			saveFieldValue(manufacturedByFieldId, '');
-			saveFieldValue(returnReasonFieldId, '');
+			// Clear dependent field selections from localStorage (batch update)
+			var selections = loadSelections();
+			selections[stateFieldId] = selectedState;
+			selections[storeFieldId] = '';
+			selections[brandFieldId] = '';
+			selections[formFieldId] = '';
+			selections[productTypeFieldId] = '';
+			selections[productDetailsFieldId] = '';
+			selections[manufacturedByFieldId] = '';
+			selections[returnReasonFieldId] = '';
+			saveSelections(selections);
 			
 			fetchStores(selectedState);
 			fetchBrands(selectedState);
@@ -821,11 +857,13 @@
 			$(productDetailsFieldSelector).data('selected', '');
 			$(returnReasonFieldSelector).data('selected', '');
 			
-			// Clear dependent field selections from localStorage
-			saveFieldValue(formFieldId, '');
-			saveFieldValue(productTypeFieldId, '');
-			saveFieldValue(productDetailsFieldId, '');
-			saveFieldValue(returnReasonFieldId, '');
+			// Clear dependent field selections from localStorage (batch update)
+			var selections = loadSelections();
+			selections[formFieldId] = '';
+			selections[productTypeFieldId] = '';
+			selections[productDetailsFieldId] = '';
+			selections[returnReasonFieldId] = '';
+			saveSelections(selections);
 			
 			fetchForms(selectedBrand, selectedState);
 			updateProductTypeField([]);
@@ -846,10 +884,12 @@
 			$(productDetailsFieldSelector).data('selected', '');
 			$(returnReasonFieldSelector).data('selected', '');
 			
-			// Clear dependent field selections from localStorage
-			saveFieldValue(productTypeFieldId, '');
-			saveFieldValue(productDetailsFieldId, '');
-			saveFieldValue(returnReasonFieldId, '');
+			// Clear dependent field selections from localStorage (batch update)
+			var selections = loadSelections();
+			selections[productTypeFieldId] = '';
+			selections[productDetailsFieldId] = '';
+			selections[returnReasonFieldId] = '';
+			saveSelections(selections);
 			
 			fetchProductTypes(selectedBrand, selectedState, selectedForm);
 			fetchReturnReason(selectedForm);
@@ -883,12 +923,11 @@
 
 		// Alternative: Clear on form submission page (if Gravity Forms redirects)
 		// This handles cases where confirmation is on a different page
-		// Only check if URL contains form submission indicators
-		if (window.location.search.indexOf('gf_page=preview') === -1 && 
-		    (window.location.search.indexOf('gform_confirmation') !== -1 || 
-		     document.referrer.indexOf('gform_confirmation') !== -1)) {
+		if (isFormSubmissionConfirmationPage()) {
 			// Check if we just submitted the form (looking for confirmation message)
-			if ($('.gform_confirmation_message').length > 0) {
+			// Scope to the specific form to avoid conflicts
+			if ($('#gform_confirmation_wrapper_' + config.formId).length > 0 || 
+			    $('#gform_' + config.formId + ' .gform_confirmation_message').length > 0) {
 				clearSelections();
 			}
 		}
