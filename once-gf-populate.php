@@ -40,6 +40,7 @@ define( 'ONCE_GF_POPULATE_MAX_PRODUCTS', 500 );
 
 /**
  * Fetch unique state values from CPT retail_customers via ACF/meta.
+ * Only includes states that have at least one associated product in the products CPT.
  *
  * @return array Unique, sorted list of state strings.
  */
@@ -81,9 +82,44 @@ function once_gf_populate_get_states() {
 	}
 
 	$states = array_unique( $states );
-	natsort( $states );
+	
+	// Filter out states that don't have any products in the products CPT
+	// Use a single query to get all states that have products for efficiency
+	$product_args = array(
+		'post_type'      => ONCE_GF_POPULATE_PRODUCTS_CPT,
+		'post_status'    => 'publish',
+		'posts_per_page' => ONCE_GF_POPULATE_MAX_PRODUCTS,
+		'fields'         => 'ids',
+	);
+	
+	$product_query = new WP_Query( $product_args );
+	$states_with_products = array();
+	
+	if ( $product_query->have_posts() ) {
+		foreach ( $product_query->posts as $product_id ) {
+			$product_state_terms = wp_get_post_terms( $product_id, ONCE_GF_POPULATE_PRODUCT_STATE_ACF );
+			if ( ! is_wp_error( $product_state_terms ) && ! empty( $product_state_terms ) ) {
+				foreach ( $product_state_terms as $term ) {
+					if ( is_object( $term ) && isset( $term->name ) ) {
+						$states_with_products[ $term->name ] = true;
+					}
+				}
+			}
+		}
+	}
+	wp_reset_postdata();
+	
+	// Filter the original states list to only include those with products
+	$filtered_states = array();
+	foreach ( $states as $state ) {
+		if ( isset( $states_with_products[ $state ] ) ) {
+			$filtered_states[] = $state;
+		}
+	}
+	
+	natsort( $filtered_states );
 
-	return array_values( $states );
+	return array_values( $filtered_states );
 }
 
 /**
@@ -141,8 +177,8 @@ function once_gf_populate_populate_field_choices( $form ) {
 	foreach ( $form['fields'] as &$field ) {
 		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_FIELD_ID ) ) {
 			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
-				$field->choices     = $choices;
-				$field->placeholder = 'Please Select State';
+				$field->choices = $choices;
+				// Do not set placeholder for State field - the choices array already includes "Please Select State"
 			}
 		}
 	}
