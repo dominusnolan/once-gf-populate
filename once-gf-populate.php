@@ -605,7 +605,7 @@ add_action( 'wp_ajax_nopriv_once_gf_populate_get_product_details', 'once_gf_popu
 
 /**
  * AJAX handler to fetch manufactured by values from products CPT filtered by state.
- * Extracts unique values from ACF field 'state_mfg' for products matching the selected state taxonomy.
+ * Extracts unique values from ACF field 'state_mfg' for products matching the selected state via product_state taxonomy.
  */
 function once_gf_populate_ajax_get_manufactured_by() {
 	nocache_headers();
