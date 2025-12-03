@@ -40,6 +40,7 @@ define( 'ONCE_GF_POPULATE_MAX_PRODUCTS', 500 );
 
 /**
  * Fetch unique state values from CPT retail_customers via ACF/meta.
+ * Only includes states that have at least one associated product in the products CPT.
  *
  * @return array Unique, sorted list of state strings.
  */
@@ -81,9 +82,37 @@ function once_gf_populate_get_states() {
 	}
 
 	$states = array_unique( $states );
-	natsort( $states );
+	
+	// Filter out states that don't have any products in the products CPT
+	$filtered_states = array();
+	foreach ( $states as $state ) {
+		$product_state_term = get_term_by( 'name', $state, ONCE_GF_POPULATE_PRODUCT_STATE_ACF );
+		if ( $product_state_term && ! is_wp_error( $product_state_term ) ) {
+			// Check if there's at least one product with this state
+			$product_args = array(
+				'post_type'      => ONCE_GF_POPULATE_PRODUCTS_CPT,
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'tax_query'      => array(
+					array(
+						'taxonomy' => ONCE_GF_POPULATE_PRODUCT_STATE_ACF,
+						'field'    => 'term_id',
+						'terms'    => $product_state_term->term_id,
+					),
+				),
+				'fields'         => 'ids',
+			);
+			$product_query = new WP_Query( $product_args );
+			if ( $product_query->have_posts() ) {
+				$filtered_states[] = $state;
+			}
+			wp_reset_postdata();
+		}
+	}
+	
+	natsort( $filtered_states );
 
-	return array_values( $states );
+	return array_values( $filtered_states );
 }
 
 /**
@@ -141,8 +170,8 @@ function once_gf_populate_populate_field_choices( $form ) {
 	foreach ( $form['fields'] as &$field ) {
 		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_FIELD_ID ) ) {
 			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
-				$field->choices     = $choices;
-				$field->placeholder = 'Please Select State';
+				$field->choices = $choices;
+				// Do not set placeholder for State field - the choices array already includes "Please Select State"
 			}
 		}
 	}
