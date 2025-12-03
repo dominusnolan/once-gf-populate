@@ -1,6 +1,6 @@
 # Once GF Populate
 
-Pre-populate Gravity Forms field choices from a Custom Post Type using ACF field values.
+Pre-populate Gravity Forms field choices from a Custom Post Type using ACF field values with localStorage persistence.
 
 - Plugin Name: Once GF Populate
 - Author: Once
@@ -14,7 +14,55 @@ For Gravity Forms Form ID `7` and Field ID `32` (Drop Down), this plugin:
 - Builds a unique, sorted list of states
 - Populates the field choices with a placeholder "Please Select State" followed by the unique states
 
+Additionally, it provides **AJAX-based cascading dropdowns** with **localStorage persistence**:
+- Store Name (depends on State)
+- Brand (depends on State)
+- Form (depends on State + Brand)
+- Product Type (depends on State + Brand + Form)
+- Product Details (depends on State + Brand + Form + Product Type)
+- Manufactured By (depends on State)
+- Return Reason (depends on Form)
+
 ![image1](image1)
+
+## localStorage Persistence Feature
+
+User selections for all AJAX-prepopulated fields are automatically saved to the browser's localStorage and restored on page refresh.
+
+### How It Works
+
+1. **Automatic Saving**: When a user selects a value in any AJAX-prepopulated dropdown, the selection is immediately saved to localStorage
+2. **Smart Restoration**: On page load, saved selections are restored and trigger cascading AJAX updates to repopulate dependent fields
+3. **Intelligent Cleanup**: Selections are cleared when:
+   - A parent field changes (dependent fields are reset)
+   - The form is successfully submitted
+4. **Graceful Degradation**: If localStorage is unavailable (e.g., private browsing), the feature fails silently without breaking functionality
+
+### localStorage Key
+
+Selections are stored with the key: `onceGfPopulate_form_{formId}_selections`
+
+Example for Form ID 7: `onceGfPopulate_form_7_selections`
+
+### Manual Testing
+
+To test localStorage persistence:
+
+1. **Fill the form**: Select values in multiple cascading dropdowns
+2. **Refresh the page**: Press F5 or reload
+3. **Verify**: All previously selected values should be restored
+4. **Change parent field**: Select a different State - dependent fields should reset
+5. **Submit successfully**: Complete and submit the form
+6. **Verify cleanup**: Refresh and verify selections are cleared
+
+To inspect stored data in browser DevTools:
+```javascript
+// View current selections
+JSON.parse(localStorage.getItem('onceGfPopulate_form_7_selections'))
+
+// Clear selections manually
+localStorage.removeItem('onceGfPopulate_form_7_selections')
+```
 
 ## Requirements
 

@@ -28,6 +28,84 @@
 		var manufacturedByFieldSelector = '#input_' + formId + '_' + manufacturedByFieldId;
 		var returnReasonFieldSelector = '#input_' + formId + '_' + returnReasonFieldId;
 
+		// Configuration constants
+		var MAX_FORM_READY_ATTEMPTS = 20; // Max attempts for DOM readiness check
+		var FORM_READY_CHECK_INTERVAL = 100; // milliseconds between checks
+		
+		// localStorage key for storing field selections
+		var localStorageKey = 'onceGfPopulate_form_' + formId + '_selections';
+
+		/**
+		 * Load saved selections from localStorage
+		 */
+		function loadSelections() {
+			try {
+				var saved = localStorage.getItem(localStorageKey);
+				return saved ? JSON.parse(saved) : {};
+			} catch (e) {
+				return {};
+			}
+		}
+
+		/**
+		 * Save selections to localStorage
+		 */
+		function saveSelections(selections) {
+			try {
+				localStorage.setItem(localStorageKey, JSON.stringify(selections));
+			} catch (e) {
+				// Silent fail if localStorage is not available
+			}
+		}
+
+		/**
+		 * Clear all saved selections from localStorage
+		 */
+		function clearSelections() {
+			try {
+				localStorage.removeItem(localStorageKey);
+			} catch (e) {
+				// Silent fail
+			}
+		}
+
+		/**
+		 * Save a single field value to localStorage
+		 */
+		function saveFieldValue(fieldId, value) {
+			var selections = loadSelections();
+			selections[fieldId] = value;
+			saveSelections(selections);
+		}
+
+		/**
+		 * Get a saved field value from localStorage
+		 */
+		function getSavedFieldValue(fieldId) {
+			var selections = loadSelections();
+			return selections[fieldId] || '';
+		}
+
+		/**
+		 * Check if there are any saved selections
+		 */
+		function hasSavedSelections(selections) {
+			return Object.keys(selections).some(function(key) {
+				return selections[key];
+			});
+		}
+
+		/**
+		 * Check if we're on a form submission confirmation page
+		 */
+		function isFormSubmissionConfirmationPage() {
+			var search = window.location.search;
+			var referrer = document.referrer || '';
+			return search.indexOf('gf_page=preview') === -1 && 
+			       (search.indexOf('gform_confirmation') !== -1 || 
+			        referrer.indexOf('gform_confirmation') !== -1);
+		}
+
 		function showLoading($field) {
 			if ($field.length === 0) return;
 			$field.prop('disabled', true);
@@ -489,28 +567,42 @@
 			});
 		}
 
-		// Track field values to preserve them on updates
+		// Track field values to preserve them on updates and save to localStorage
 	function trackFieldChanges() {
 		$(storeFieldSelector).on('change', function() {
-			$(this).data('selected', $(this).val());
+			var val = $(this).val();
+			$(this).data('selected', val);
+			saveFieldValue(storeFieldId, val);
 		});
 		$(brandFieldSelector).on('change', function() {
-			$(this).data('selected', $(this).val());
+			var val = $(this).val();
+			$(this).data('selected', val);
+			saveFieldValue(brandFieldId, val);
 		});
 		$(formFieldSelector).on('change', function() {
-			$(this).data('selected', $(this).val());
+			var val = $(this).val();
+			$(this).data('selected', val);
+			saveFieldValue(formFieldId, val);
 		});
 		$(productTypeFieldSelector).on('change', function() {
-			$(this).data('selected', $(this).val());
+			var val = $(this).val();
+			$(this).data('selected', val);
+			saveFieldValue(productTypeFieldId, val);
 		});
 		$(productDetailsFieldSelector).on('change', function() {
-			$(this).data('selected', $(this).val());
+			var val = $(this).val();
+			$(this).data('selected', val);
+			saveFieldValue(productDetailsFieldId, val);
 		});
 		$(manufacturedByFieldSelector).on('change', function() {
-			$(this).data('selected', $(this).val());
+			var val = $(this).val();
+			$(this).data('selected', val);
+			saveFieldValue(manufacturedByFieldId, val);
 		});
 		$(returnReasonFieldSelector).on('change', function() {
-			$(this).data('selected', $(this).val());
+			var val = $(this).val();
+			$(this).data('selected', val);
+			saveFieldValue(returnReasonFieldId, val);
 		});
 	}
 
@@ -585,6 +677,103 @@
 	// Store initial values
 	storeInitialValues();
 
+	/**
+	 * Restore selections from localStorage and trigger cascading AJAX updates
+	 */
+	function restoreSelectionsFromLocalStorage() {
+		var $stateField = $(stateFieldSelector);
+		var $storeField = $(storeFieldSelector);
+		var $brandField = $(brandFieldSelector);
+		var $formField = $(formFieldSelector);
+		var $productTypeField = $(productTypeFieldSelector);
+		var $productDetailsField = $(productDetailsFieldSelector);
+		var $manufacturedByField = $(manufacturedByFieldSelector);
+		var $returnReasonField = $(returnReasonFieldSelector);
+
+		// Load saved selections
+		var savedStore = getSavedFieldValue(storeFieldId);
+		var savedBrand = getSavedFieldValue(brandFieldId);
+		var savedForm = getSavedFieldValue(formFieldId);
+		var savedProductType = getSavedFieldValue(productTypeFieldId);
+		var savedProductDetails = getSavedFieldValue(productDetailsFieldId);
+		var savedManufacturedBy = getSavedFieldValue(manufacturedByFieldId);
+		var savedReturnReason = getSavedFieldValue(returnReasonFieldId);
+
+		// Get current state value (not AJAX-managed, so check field directly)
+		var stateVal = $stateField.val();
+
+		// Only restore if we have a state value and at least one saved selection
+		var savedSelections = {
+			store: savedStore,
+			brand: savedBrand,
+			form: savedForm,
+			productType: savedProductType,
+			productDetails: savedProductDetails,
+			manufacturedBy: savedManufacturedBy,
+			returnReason: savedReturnReason
+		};
+		
+		if (stateVal && hasSavedSelections(savedSelections)) {
+			// Store the saved values in data attributes for preservation
+			if (savedStore) $storeField.data('selected', savedStore);
+			if (savedBrand) $brandField.data('selected', savedBrand);
+			if (savedForm) $formField.data('selected', savedForm);
+			if (savedProductType) $productTypeField.data('selected', savedProductType);
+			if (savedProductDetails) $productDetailsField.data('selected', savedProductDetails);
+			if (savedManufacturedBy) $manufacturedByField.data('selected', savedManufacturedBy);
+			if (savedReturnReason) $returnReasonField.data('selected', savedReturnReason);
+
+			// Trigger cascading AJAX repopulation with saved values
+			// This will repopulate all dependent fields
+			fetchStores(stateVal, savedStore);
+			fetchBrands(stateVal, savedBrand);
+			fetchManufacturedBy(stateVal, savedManufacturedBy);
+
+			if (savedBrand) {
+				fetchForms(savedBrand, stateVal, savedForm);
+				
+				if (savedForm) {
+					fetchReturnReason(savedForm, savedReturnReason);
+					fetchProductTypes(savedBrand, stateVal, savedForm, savedProductType);
+					
+					if (savedProductType) {
+						fetchProductDetails(savedBrand, stateVal, savedForm, savedProductType, savedProductDetails);
+					}
+				}
+			}
+		}
+	}
+
+	// Restore selections from localStorage on initial page load
+	// Wait for form to be fully rendered with a reasonable timeout
+	// Check if state field is already populated before restoring
+	function waitForFormReady(callback, maxAttempts) {
+		maxAttempts = maxAttempts || MAX_FORM_READY_ATTEMPTS;
+		var attempts = 0;
+		
+		function checkReady() {
+			var $stateField = $(stateFieldSelector);
+			if ($stateField.length > 0 && $stateField.find('option').length > 1) {
+				// State field is ready with options
+				callback();
+			} else if (attempts < maxAttempts) {
+				attempts++;
+				setTimeout(checkReady, FORM_READY_CHECK_INTERVAL);
+			} else {
+				// Fallback: run anyway after max attempts (form should be ready by now)
+				// This ensures restoration happens even if DOM checks fail
+				if (console && console.warn) {
+					console.warn('Once GF Populate: Form readiness check timed out, attempting restoration anyway');
+				}
+				callback();
+			}
+		}
+		
+		checkReady();
+	}
+	
+	waitForFormReady(restoreSelectionsFromLocalStorage);
+
 	// On form error rerender, trigger cascading repopulation
 	function handleFormRerender() {
 		var $stateField = $(stateFieldSelector);
@@ -628,6 +817,7 @@
 	$(document).on('change', stateFieldSelector, function () {
 			var selectedState = $(this).val();
 			$(this).data('selected', selectedState);
+			saveFieldValue(stateFieldId, selectedState);
 			
 			// When state changes, repopulate dependent fields but clear their stored selections
 			// (user intentionally changed state, so downstream selections should reset)
@@ -638,6 +828,18 @@
 			$(productDetailsFieldSelector).data('selected', '');
 			$(manufacturedByFieldSelector).data('selected', '');
 			$(returnReasonFieldSelector).data('selected', '');
+			
+			// Clear dependent field selections from localStorage (batch update)
+			var selections = loadSelections();
+			selections[stateFieldId] = selectedState;
+			selections[storeFieldId] = '';
+			selections[brandFieldId] = '';
+			selections[formFieldId] = '';
+			selections[productTypeFieldId] = '';
+			selections[productDetailsFieldId] = '';
+			selections[manufacturedByFieldId] = '';
+			selections[returnReasonFieldId] = '';
+			saveSelections(selections);
 			
 			fetchStores(selectedState);
 			fetchBrands(selectedState);
@@ -660,6 +862,14 @@
 			$(productDetailsFieldSelector).data('selected', '');
 			$(returnReasonFieldSelector).data('selected', '');
 			
+			// Clear dependent field selections from localStorage (batch update)
+			var selections = loadSelections();
+			selections[formFieldId] = '';
+			selections[productTypeFieldId] = '';
+			selections[productDetailsFieldId] = '';
+			selections[returnReasonFieldId] = '';
+			saveSelections(selections);
+			
 			fetchForms(selectedBrand, selectedState);
 			updateProductTypeField([]);
 			updateProductDetailsField([]);
@@ -679,6 +889,13 @@
 			$(productDetailsFieldSelector).data('selected', '');
 			$(returnReasonFieldSelector).data('selected', '');
 			
+			// Clear dependent field selections from localStorage (batch update)
+			var selections = loadSelections();
+			selections[productTypeFieldId] = '';
+			selections[productDetailsFieldId] = '';
+			selections[returnReasonFieldId] = '';
+			saveSelections(selections);
+			
 			fetchProductTypes(selectedBrand, selectedState, selectedForm);
 			fetchReturnReason(selectedForm);
 			updateProductDetailsField([]);
@@ -696,7 +913,29 @@
 			// When product type changes, clear product details selection
 			$(productDetailsFieldSelector).data('selected', '');
 			
+			// Clear dependent field selection from localStorage
+			saveFieldValue(productDetailsFieldId, '');
+			
 			fetchProductDetails(selectedBrand, selectedState, selectedForm, selectedProductType);
 		});
+
+		// Clear localStorage on successful form submission
+		$(document).on('gform_confirmation_loaded', function(event, confirmedFormId) {
+			// Compare as strings to handle both string and number types
+			if (String(confirmedFormId) === String(config.formId)) {
+				clearSelections();
+			}
+		});
+
+		// Alternative: Clear on form submission page (if Gravity Forms redirects)
+		// This handles cases where confirmation is on a different page
+		if (isFormSubmissionConfirmationPage()) {
+			// Check if we just submitted the form (looking for confirmation message)
+			// Scope to the specific form to avoid conflicts
+			if ($('#gform_confirmation_wrapper_' + config.formId).length > 0 || 
+			    $('#gform_' + config.formId + ' .gform_confirmation_message').length > 0) {
+				clearSelections();
+			}
+		}
 	});
 })(jQuery);
