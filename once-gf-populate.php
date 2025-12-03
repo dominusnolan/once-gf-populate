@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Once GF Populate
- * Description: Pre-populate Gravity Forms fields from a custom post type (CPT) using ACF values. Example: Populate Form ID 7, Field ID 32 with unique "state" values from CPT "retail_customers".
+ * Description: Pre-populate Gravity Forms fields from a custom post type (CPT) using taxonomy terms. Populates Form ID 7, Field ID 32 with unique "state" values from CPT "products", and dynamically populates Field ID 10 (Brand) based on selected state.
  * Version: 1.0.0
  * Author: Once
  * Author URI: https://onceinteractive.com
@@ -24,7 +24,7 @@ define( 'ONCE_GF_POPULATE_ACF_FIELD', 'state' );
 define( 'ONCE_GF_POPULATE_MAX_STORES', 500 );
 
 /**
- * Fetch unique state values from CPT retail_customers via ACF/meta.
+ * Fetch unique state values from CPT products via ACF/meta.
  *
  * @return array Unique, sorted list of state strings.
  */
