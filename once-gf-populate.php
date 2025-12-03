@@ -192,18 +192,18 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 		 * @param {Array} choices - Array of choice objects with value and text
 		 */
 		function updateSelect(selector, choices) {
-			var \$field = $(selector);
+			var $field = $(selector);
 			
-			if (\$field.length === 0) {
+			if ($field.length === 0) {
 				return;
 			}
 			
 			// Clear existing options
-			\$field.empty();
+			$field.empty();
 			
 			// Add placeholder option
-			\$field.append(
-				\$('<option>', {
+			$field.append(
+				$('<option>', {
 					value: '',
 					text: 'Please Select'
 				})
@@ -212,8 +212,8 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 			// Add choices
 			if (choices && choices.length > 0) {
 				$.each(choices, function(index, choice) {
-					\$field.append(
-						\$('<option>', {
+					$field.append(
+						$('<option>', {
 							value: choice.value,
 							text: choice.text
 						})
@@ -222,7 +222,7 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 			}
 			
 			// Trigger change event to update Gravity Forms
-			\$field.trigger('change');
+			$field.trigger('change');
 		}
 		
 		/**
@@ -426,7 +426,7 @@ function once_gf_populate_ajax_get_brands() {
 	$args = array(
 		'post_type'      => 'products',
 		'post_status'    => 'publish',
-		'posts_per_page' => -1,
+		'posts_per_page' => 1000,
 		'fields'         => 'ids',
 		'tax_query'      => array(
 			array(
