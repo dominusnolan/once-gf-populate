@@ -1410,24 +1410,33 @@ function once_gf_populate_pre_validation_handler( $form ) {
 add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( empty( $form['fields'] ) || ! is_array( $form['fields'] ) ) return $form;
 
-	foreach ( $form['fields'] as &$field ) {
-		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_STORE_NAME_FIELD_ID )
-			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_BRAND_FIELD_ID )
-			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_FORM_FIELD_ID )
-			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID )
-			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID )
-			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID )
-			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID )
-		) {
-			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
-				$field->choices = array(
-					array(
-						'text'       => 'Please Select',
-						'value'      => '',
-						'isSelected' => false,
-					),
-				);
-				$field->placeholder = 'Please Select';
+	// Check if this is a form rerender after validation (POST request with form data)
+	$is_form_submission = ! empty( $_POST ) && isset( $_POST['is_submit_' . ONCE_GF_POPULATE_FORM_ID] );
+	
+	if ( $is_form_submission ) {
+		// If form was submitted (validation error rerender), populate choices with submitted values
+		$form = once_gf_populate_pre_validation_handler( $form );
+	} else {
+		// Initial render: set placeholder choices
+		foreach ( $form['fields'] as &$field ) {
+			if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_STORE_NAME_FIELD_ID )
+				|| intval( $field->id ) === intval( ONCE_GF_POPULATE_BRAND_FIELD_ID )
+				|| intval( $field->id ) === intval( ONCE_GF_POPULATE_FORM_FIELD_ID )
+				|| intval( $field->id ) === intval( ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID )
+				|| intval( $field->id ) === intval( ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID )
+				|| intval( $field->id ) === intval( ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID )
+				|| intval( $field->id ) === intval( ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID )
+			) {
+				if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
+					$field->choices = array(
+						array(
+							'text'       => 'Please Select',
+							'value'      => '',
+							'isSelected' => false,
+						),
+					);
+					$field->placeholder = 'Please Select';
+				}
 			}
 		}
 	}

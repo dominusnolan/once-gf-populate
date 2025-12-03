@@ -40,9 +40,13 @@
 			$field.prop('disabled', false);
 		}
 
-		function updateStoreField(choices) {
+		function updateStoreField(choices, preserveValue) {
 			var $storeField = $(storeFieldSelector);
 			if ($storeField.length === 0) return;
+			
+			// Store current value before updating
+			var previousValue = preserveValue !== undefined ? preserveValue : $storeField.data('selected') || $storeField.val();
+			
 			hideLoading($storeField);
 			$storeField.empty();
 			$storeField.append($('<option>', {value: '', text: 'Please Select'}));
@@ -54,12 +58,25 @@
 					}));
 				});
 			}
+			
+			// Restore previous value if it exists in the new choices
+			if (previousValue && $storeField.find('option[value="' + previousValue + '"]').length > 0) {
+				$storeField.val(previousValue);
+				$storeField.data('selected', previousValue);
+			} else {
+				$storeField.data('selected', '');
+			}
+			
 			$storeField.trigger('change');
 		}
 
-		function updateBrandField(choices) {
+		function updateBrandField(choices, preserveValue) {
 			var $brandField = $(brandFieldSelector);
 			if ($brandField.length === 0) return;
+			
+			// Store current value before updating
+			var previousValue = preserveValue !== undefined ? preserveValue : $brandField.data('selected') || $brandField.val();
+			
 			hideLoading($brandField);
 			$brandField.empty();
 			$brandField.append($('<option>', {value: '', text: 'Please Select'}));
@@ -71,12 +88,25 @@
 					}));
 				});
 			}
+			
+			// Restore previous value if it exists in the new choices
+			if (previousValue && $brandField.find('option[value="' + previousValue + '"]').length > 0) {
+				$brandField.val(previousValue);
+				$brandField.data('selected', previousValue);
+			} else {
+				$brandField.data('selected', '');
+			}
+			
 			$brandField.trigger('change');
 		}
 
-		function updateFormField(choices) {
+		function updateFormField(choices, preserveValue) {
 			var $formField = $(formFieldSelector);
 			if ($formField.length === 0) return;
+			
+			// Store current value before updating
+			var previousValue = preserveValue !== undefined ? preserveValue : $formField.data('selected') || $formField.val();
+			
 			hideLoading($formField);
 			$formField.empty();
 			$formField.append($('<option>', {value: '', text: 'Please Select'}));
@@ -88,12 +118,25 @@
 					}));
 				});
 			}
+			
+			// Restore previous value if it exists in the new choices
+			if (previousValue && $formField.find('option[value="' + previousValue + '"]').length > 0) {
+				$formField.val(previousValue);
+				$formField.data('selected', previousValue);
+			} else {
+				$formField.data('selected', '');
+			}
+			
 			$formField.trigger('change');
 		}
 
-		function updateProductTypeField(choices) {
+		function updateProductTypeField(choices, preserveValue) {
 			var $productTypeField = $(productTypeFieldSelector);
 			if ($productTypeField.length === 0) return;
+			
+			// Store current value before updating
+			var previousValue = preserveValue !== undefined ? preserveValue : $productTypeField.data('selected') || $productTypeField.val();
+			
 			hideLoading($productTypeField);
 			$productTypeField.empty();
 			$productTypeField.append($('<option>', {value: '', text: 'Please Select'}));
@@ -105,12 +148,25 @@
 					}));
 				});
 			}
+			
+			// Restore previous value if it exists in the new choices
+			if (previousValue && $productTypeField.find('option[value="' + previousValue + '"]').length > 0) {
+				$productTypeField.val(previousValue);
+				$productTypeField.data('selected', previousValue);
+			} else {
+				$productTypeField.data('selected', '');
+			}
+			
 			$productTypeField.trigger('change');
 		}
 
-		function updateProductDetailsField(choices) {
+		function updateProductDetailsField(choices, preserveValue) {
 			var $productDetailsField = $(productDetailsFieldSelector);
 			if ($productDetailsField.length === 0) return;
+			
+			// Store current value before updating
+			var previousValue = preserveValue !== undefined ? preserveValue : $productDetailsField.data('selected') || $productDetailsField.val();
+			
 			hideLoading($productDetailsField);
 			$productDetailsField.empty();
 			$productDetailsField.append($('<option>', {value: '', text: 'Please Select'}));
@@ -122,12 +178,25 @@
 					}));
 				});
 			}
+			
+			// Restore previous value if it exists in the new choices
+			if (previousValue && $productDetailsField.find('option[value="' + previousValue + '"]').length > 0) {
+				$productDetailsField.val(previousValue);
+				$productDetailsField.data('selected', previousValue);
+			} else {
+				$productDetailsField.data('selected', '');
+			}
+			
 			$productDetailsField.trigger('change');
 		}
 
-		function updateManufacturedByField(choices) {
+		function updateManufacturedByField(choices, preserveValue) {
 			var $manufacturedByField = $(manufacturedByFieldSelector);
 			if ($manufacturedByField.length === 0) return;
+			
+			// Store current value before updating
+			var previousValue = preserveValue !== undefined ? preserveValue : $manufacturedByField.data('selected') || $manufacturedByField.val();
+			
 			hideLoading($manufacturedByField);
 			$manufacturedByField.empty();
 			$manufacturedByField.append($('<option>', {value: '', text: 'Please Select'}));
@@ -139,12 +208,25 @@
 					}));
 				});
 			}
+			
+			// Restore previous value if it exists in the new choices
+			if (previousValue && $manufacturedByField.find('option[value="' + previousValue + '"]').length > 0) {
+				$manufacturedByField.val(previousValue);
+				$manufacturedByField.data('selected', previousValue);
+			} else {
+				$manufacturedByField.data('selected', '');
+			}
+			
 			$manufacturedByField.trigger('change');
 		}
 
-		function updateReturnReasonField(choices) {
+		function updateReturnReasonField(choices, preserveValue) {
 			var $returnReasonField = $(returnReasonFieldSelector);
 			if ($returnReasonField.length === 0) return;
+			
+			// Store current value before updating
+			var previousValue = preserveValue !== undefined ? preserveValue : $returnReasonField.data('selected') || $returnReasonField.val();
+			
 			hideLoading($returnReasonField);
 			$returnReasonField.empty();
 			$returnReasonField.append($('<option>', {value: '', text: 'Please Select'}));
@@ -156,11 +238,20 @@
 					}));
 				});
 			}
+			
+			// Restore previous value if it exists in the new choices
+			if (previousValue && $returnReasonField.find('option[value="' + previousValue + '"]').length > 0) {
+				$returnReasonField.val(previousValue);
+				$returnReasonField.data('selected', previousValue);
+			} else {
+				$returnReasonField.data('selected', '');
+			}
+			
 			$returnReasonField.trigger('change');
 		}
 
-		function fetchStores(state) {
-			if (!state) { updateStoreField([]); return; }
+		function fetchStores(state, preserveValue) {
+			if (!state) { updateStoreField([], preserveValue); return; }
 			showLoading($(storeFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
@@ -173,7 +264,7 @@
 				cache: false,
 				success: function (response) {
 					if (response.success && response.data && response.data.choices) {
-						updateStoreField(response.data.choices);
+						updateStoreField(response.data.choices, preserveValue);
 					} else {
 						updateStoreField([]);
 					}
@@ -184,8 +275,8 @@
 			});
 		}
 
-		function fetchBrands(state) {
-			if (!state) { updateBrandField([]); return; }
+		function fetchBrands(state, preserveValue) {
+			if (!state) { updateBrandField([], preserveValue); return; }
 			showLoading($(brandFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
@@ -198,7 +289,7 @@
 				cache: false,
 				success: function (response) {
 					if (response.success && response.data && response.data.choices) {
-						updateBrandField(response.data.choices);
+						updateBrandField(response.data.choices, preserveValue);
 					} else {
 						updateBrandField([]);
 					}
@@ -209,9 +300,9 @@
 			});
 		}
 
-		function fetchForms(brand, state) {
+		function fetchForms(brand, state, preserveValue) {
 			if (!brand || !state) {
-				updateFormField([]);
+			updateFormField([], preserveValue);
 				return;
 			}
 			showLoading($(formFieldSelector));
@@ -227,7 +318,7 @@
 				cache: false,
 				success: function (response) {
 					if (response.success && response.data && response.data.choices) {
-						updateFormField(response.data.choices);
+						updateFormField(response.data.choices, preserveValue);
 					} else {
 						updateFormField([]);
 					}
@@ -238,9 +329,9 @@
 			});
 		}
 
-		function fetchProductTypes(brand, state, form) {
+		function fetchProductTypes(brand, state, form, preserveValue) {
 			if (!brand || !state || !form) {
-				updateProductTypeField([]);
+			updateProductTypeField([], preserveValue);
 				return;
 			}
 			showLoading($(productTypeFieldSelector));
@@ -257,7 +348,7 @@
 				cache: false,
 				success: function(response) {
 					if (response.success && response.data && response.data.choices) {
-						updateProductTypeField(response.data.choices);
+						updateProductTypeField(response.data.choices, preserveValue);
 					} else {
 						updateProductTypeField([]);
 					}
@@ -268,9 +359,9 @@
 			});
 		}
 
-		function fetchProductDetails(brand, state, form, productType) {
+		function fetchProductDetails(brand, state, form, productType, preserveValue) {
 			if (!brand || !state || !form || !productType) {
-				updateProductDetailsField([]);
+			updateProductDetailsField([], preserveValue);
 				return;
 			}
 			showLoading($(productDetailsFieldSelector));
@@ -288,7 +379,7 @@
 				cache: false,
 				success: function(response) {
 					if (response.success && response.data && response.data.choices) {
-						updateProductDetailsField(response.data.choices);
+						updateProductDetailsField(response.data.choices, preserveValue);
 					} else {
 						updateProductDetailsField([]);
 					}
@@ -299,8 +390,8 @@
 			});
 		}
 
-		function fetchManufacturedBy(state) {
-			if (!state) { updateManufacturedByField([]); return; }
+		function fetchManufacturedBy(state, preserveValue) {
+			if (!state) { updateManufacturedByField([], preserveValue); return; }
 			showLoading($(manufacturedByFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
@@ -313,7 +404,7 @@
 				cache: false,
 				success: function (response) {
 					if (response.success && response.data && response.data.choices) {
-						updateManufacturedByField(response.data.choices);
+						updateManufacturedByField(response.data.choices, preserveValue);
 					} else {
 						updateManufacturedByField([]);
 					}
@@ -324,8 +415,8 @@
 			});
 		}
 
-		function fetchReturnReason(form) {
-			if (!form) { updateReturnReasonField([]); return; }
+		function fetchReturnReason(form, preserveValue) {
+			if (!form) { updateReturnReasonField([], preserveValue); return; }
 			showLoading($(returnReasonFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
@@ -338,7 +429,7 @@
 				cache: false,
 				success: function (response) {
 					if (response.success && response.data && response.data.choices) {
-						updateReturnReasonField(response.data.choices);
+						updateReturnReasonField(response.data.choices, preserveValue);
 					} else {
 						updateReturnReasonField([]);
 					}
@@ -349,7 +440,115 @@
 			});
 		}
 
-		$(document).on('change', stateFieldSelector, function () {
+		// Track field values to preserve them on updates
+	function trackFieldChanges() {
+		$(storeFieldSelector).on('change', function() {
+			$(this).data('selected', $(this).val());
+		});
+		$(brandFieldSelector).on('change', function() {
+			$(this).data('selected', $(this).val());
+		});
+		$(formFieldSelector).on('change', function() {
+			$(this).data('selected', $(this).val());
+		});
+		$(productTypeFieldSelector).on('change', function() {
+			$(this).data('selected', $(this).val());
+		});
+		$(productDetailsFieldSelector).on('change', function() {
+			$(this).data('selected', $(this).val());
+		});
+		$(manufacturedByFieldSelector).on('change', function() {
+			$(this).data('selected', $(this).val());
+		});
+		$(returnReasonFieldSelector).on('change', function() {
+			$(this).data('selected', $(this).val());
+		});
+	}
+
+	// Initialize field value tracking
+	trackFieldChanges();
+
+	// Store initial values on page load (for form error rerenders)
+	function storeInitialValues() {
+		var $stateField = $(stateFieldSelector);
+		var $storeField = $(storeFieldSelector);
+		var $brandField = $(brandFieldSelector);
+		var $formField = $(formFieldSelector);
+		var $productTypeField = $(productTypeFieldSelector);
+		var $productDetailsField = $(productDetailsFieldSelector);
+		var $manufacturedByField = $(manufacturedByFieldSelector);
+		var $returnReasonField = $(returnReasonFieldSelector);
+
+		if ($stateField.length && $stateField.val()) {
+			$stateField.data('selected', $stateField.val());
+		}
+		if ($storeField.length && $storeField.val()) {
+			$storeField.data('selected', $storeField.val());
+		}
+		if ($brandField.length && $brandField.val()) {
+			$brandField.data('selected', $brandField.val());
+		}
+		if ($formField.length && $formField.val()) {
+			$formField.data('selected', $formField.val());
+		}
+		if ($productTypeField.length && $productTypeField.val()) {
+			$productTypeField.data('selected', $productTypeField.val());
+		}
+		if ($productDetailsField.length && $productDetailsField.val()) {
+			$productDetailsField.data('selected', $productDetailsField.val());
+		}
+		if ($manufacturedByField.length && $manufacturedByField.val()) {
+			$manufacturedByField.data('selected', $manufacturedByField.val());
+		}
+		if ($returnReasonField.length && $returnReasonField.val()) {
+			$returnReasonField.data('selected', $returnReasonField.val());
+		}
+	}
+
+	// Store initial values
+	storeInitialValues();
+
+	// On form error rerender, trigger cascading repopulation
+	function handleFormRerender() {
+		var $stateField = $(stateFieldSelector);
+		var $brandField = $(brandFieldSelector);
+		var $formField = $(formFieldSelector);
+		var $productTypeField = $(productTypeFieldSelector);
+
+		// Check if we have validation errors (Gravity Forms adds this class)
+		if ($('.gform_validation_error').length > 0 || $('.gfield_error').length > 0) {
+			// Repopulate dependent fields with stored values
+			var stateVal = $stateField.val();
+			var brandVal = $brandField.data('selected') || $brandField.val();
+			var formVal = $formField.data('selected') || $formField.val();
+			var productTypeVal = $productTypeField.data('selected') || $productTypeField.val();
+
+			if (stateVal) {
+				// Fetch all state-dependent fields
+				fetchStores(stateVal, $(storeFieldSelector).data('selected'));
+				fetchBrands(stateVal, brandVal);
+				fetchManufacturedBy(stateVal, $(manufacturedByFieldSelector).data('selected'));
+				
+				if (brandVal) {
+					fetchForms(brandVal, stateVal, formVal);
+					
+					if (formVal) {
+						fetchProductTypes(brandVal, stateVal, formVal, productTypeVal);
+						fetchReturnReason(formVal, $(returnReasonFieldSelector).data('selected'));
+						
+						if (productTypeVal) {
+							fetchProductDetails(brandVal, stateVal, formVal, productTypeVal, $(productDetailsFieldSelector).data('selected'));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Trigger rerender handling on page load
+	setTimeout(handleFormRerender, 100);
+
+	$(document).on('change', stateFieldSelector, function () {
 			var selectedState = $(this).val();
 			var selectedBrand = $(brandFieldSelector).val();
 			var selectedForm = $(formFieldSelector).val();
