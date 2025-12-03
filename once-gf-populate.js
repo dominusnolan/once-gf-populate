@@ -16,6 +16,8 @@
 		var formFieldId = config.formFieldId;
 		var productTypeFieldId = config.productTypeFieldId;
 		var productDetailsFieldId = config.productDetailsFieldId;
+		var manufacturedByFieldId = config.manufacturedByFieldId;
+		var returnReasonFieldId = config.returnReasonFieldId;
 
 		var stateFieldSelector = '#input_' + formId + '_' + stateFieldId;
 		var storeFieldSelector = '#input_' + formId + '_' + storeFieldId;
@@ -23,10 +25,25 @@
 		var formFieldSelector = '#input_' + formId + '_' + formFieldId;
 		var productTypeFieldSelector = '#input_' + formId + '_' + productTypeFieldId;
 		var productDetailsFieldSelector = '#input_' + formId + '_' + productDetailsFieldId;
+		var manufacturedByFieldSelector = '#input_' + formId + '_' + manufacturedByFieldId;
+		var returnReasonFieldSelector = '#input_' + formId + '_' + returnReasonFieldId;
+
+		function showLoading($field) {
+			if ($field.length === 0) return;
+			$field.prop('disabled', true);
+			$field.empty();
+			$field.append($('<option>', {value: '', text: 'Loading...'}));
+		}
+
+		function hideLoading($field) {
+			if ($field.length === 0) return;
+			$field.prop('disabled', false);
+		}
 
 		function updateStoreField(choices) {
 			var $storeField = $(storeFieldSelector);
 			if ($storeField.length === 0) return;
+			hideLoading($storeField);
 			$storeField.empty();
 			$storeField.append($('<option>', {value: '', text: 'Please Select'}));
 			if (choices && choices.length > 0) {
@@ -43,6 +60,7 @@
 		function updateBrandField(choices) {
 			var $brandField = $(brandFieldSelector);
 			if ($brandField.length === 0) return;
+			hideLoading($brandField);
 			$brandField.empty();
 			$brandField.append($('<option>', {value: '', text: 'Please Select'}));
 			if (choices && choices.length > 0) {
@@ -59,6 +77,7 @@
 		function updateFormField(choices) {
 			var $formField = $(formFieldSelector);
 			if ($formField.length === 0) return;
+			hideLoading($formField);
 			$formField.empty();
 			$formField.append($('<option>', {value: '', text: 'Please Select'}));
 			if (choices && choices.length > 0) {
@@ -75,6 +94,7 @@
 		function updateProductTypeField(choices) {
 			var $productTypeField = $(productTypeFieldSelector);
 			if ($productTypeField.length === 0) return;
+			hideLoading($productTypeField);
 			$productTypeField.empty();
 			$productTypeField.append($('<option>', {value: '', text: 'Please Select'}));
 			if (choices && choices.length > 0) {
@@ -91,6 +111,7 @@
 		function updateProductDetailsField(choices) {
 			var $productDetailsField = $(productDetailsFieldSelector);
 			if ($productDetailsField.length === 0) return;
+			hideLoading($productDetailsField);
 			$productDetailsField.empty();
 			$productDetailsField.append($('<option>', {value: '', text: 'Please Select'}));
 			if (choices && choices.length > 0) {
@@ -104,8 +125,43 @@
 			$productDetailsField.trigger('change');
 		}
 
+		function updateManufacturedByField(choices) {
+			var $manufacturedByField = $(manufacturedByFieldSelector);
+			if ($manufacturedByField.length === 0) return;
+			hideLoading($manufacturedByField);
+			$manufacturedByField.empty();
+			$manufacturedByField.append($('<option>', {value: '', text: 'Please Select'}));
+			if (choices && choices.length > 0) {
+				$.each(choices, function(_, choice) {
+					$manufacturedByField.append($('<option>', {
+						value: choice.value,
+						text: choice.text
+					}));
+				});
+			}
+			$manufacturedByField.trigger('change');
+		}
+
+		function updateReturnReasonField(choices) {
+			var $returnReasonField = $(returnReasonFieldSelector);
+			if ($returnReasonField.length === 0) return;
+			hideLoading($returnReasonField);
+			$returnReasonField.empty();
+			$returnReasonField.append($('<option>', {value: '', text: 'Please Select'}));
+			if (choices && choices.length > 0) {
+				$.each(choices, function(_, choice) {
+					$returnReasonField.append($('<option>', {
+						value: choice.value,
+						text: choice.text
+					}));
+				});
+			}
+			$returnReasonField.trigger('change');
+		}
+
 		function fetchStores(state) {
 			if (!state) { updateStoreField([]); return; }
+			showLoading($(storeFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
 				type: 'POST',
@@ -130,6 +186,7 @@
 
 		function fetchBrands(state) {
 			if (!state) { updateBrandField([]); return; }
+			showLoading($(brandFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
 				type: 'POST',
@@ -157,6 +214,7 @@
 				updateFormField([]);
 				return;
 			}
+			showLoading($(formFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
 				type: 'POST',
@@ -185,6 +243,7 @@
 				updateProductTypeField([]);
 				return;
 			}
+			showLoading($(productTypeFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
 				type: 'POST',
@@ -214,6 +273,7 @@
 				updateProductDetailsField([]);
 				return;
 			}
+			showLoading($(productDetailsFieldSelector));
 			$.ajax({
 				url: config.ajaxUrl,
 				type: 'POST',
@@ -239,12 +299,63 @@
 			});
 		}
 
+		function fetchManufacturedBy(state) {
+			if (!state) { updateManufacturedByField([]); return; }
+			showLoading($(manufacturedByFieldSelector));
+			$.ajax({
+				url: config.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'once_gf_populate_get_manufactured_by',
+					nonce: config.nonce,
+					state: state
+				},
+				cache: false,
+				success: function (response) {
+					if (response.success && response.data && response.data.choices) {
+						updateManufacturedByField(response.data.choices);
+					} else {
+						updateManufacturedByField([]);
+					}
+				},
+				error: function () {
+					updateManufacturedByField([]);
+				}
+			});
+		}
+
+		function fetchReturnReason(form) {
+			if (!form) { updateReturnReasonField([]); return; }
+			showLoading($(returnReasonFieldSelector));
+			$.ajax({
+				url: config.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'once_gf_populate_get_return_reason',
+					nonce: config.nonce,
+					form: form
+				},
+				cache: false,
+				success: function (response) {
+					if (response.success && response.data && response.data.choices) {
+						updateReturnReasonField(response.data.choices);
+					} else {
+						updateReturnReasonField([]);
+					}
+				},
+				error: function () {
+					updateReturnReasonField([]);
+				}
+			});
+		}
+
 		$(document).on('change', stateFieldSelector, function () {
 			var selectedState = $(this).val();
 			var selectedBrand = $(brandFieldSelector).val();
 			var selectedForm = $(formFieldSelector).val();
 			fetchStores(selectedState);
 			fetchBrands(selectedState);
+			fetchManufacturedBy(selectedState);
 			fetchForms(selectedBrand, selectedState);
 			updateProductTypeField([]); // Reset Product Type
 			updateProductDetailsField([]); // Reset Product Details
@@ -259,12 +370,13 @@
 			updateProductDetailsField([]); // Reset Product Details
 		});
 
-		// When "Form" changes, update Product Type
+		// When "Form" changes, update Product Type and Return Reason
 		$(document).on('change', formFieldSelector, function () {
 			var selectedForm = $(this).val();
 			var selectedState = $(stateFieldSelector).val();
 			var selectedBrand = $(brandFieldSelector).val();
 			fetchProductTypes(selectedBrand, selectedState, selectedForm);
+			fetchReturnReason(selectedForm);
 			updateProductDetailsField([]); // Reset Product Details
 		});
 
