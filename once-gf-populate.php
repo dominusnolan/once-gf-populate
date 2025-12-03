@@ -797,6 +797,20 @@ add_action( 'wp_ajax_once_gf_populate_get_return_reason', 'once_gf_populate_ajax
 add_action( 'wp_ajax_nopriv_once_gf_populate_get_return_reason', 'once_gf_populate_ajax_get_return_reason' );
 
 /**
+ * Helper function to get sanitized POST value for a Gravity Forms field.
+ *
+ * @param int $field_id The Gravity Forms field ID.
+ * @return string Sanitized field value or empty string.
+ */
+function once_gf_populate_get_post_value( $field_id ) {
+	$input_key = 'input_' . $field_id;
+	if ( isset( $_POST[ $input_key ] ) ) {
+		return sanitize_text_field( wp_unslash( $_POST[ $input_key ] ) );
+	}
+	return '';
+}
+
+/**
  * Helper function to get store choices by state (server-side, mirrors AJAX handler).
  *
  * @param string $state The state value.
@@ -1323,32 +1337,15 @@ function once_gf_populate_pre_validation_handler( $form ) {
 		return $form;
 	}
 
-	// Get submitted values from POST
-	$input_prefix = 'input_';
-	$state_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_FIELD_ID ] ) ) 
-		: '';
-	$store_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_STORE_NAME_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_STORE_NAME_FIELD_ID ] ) ) 
-		: '';
-	$brand_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_BRAND_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_BRAND_FIELD_ID ] ) ) 
-		: '';
-	$form_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_FORM_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_FORM_FIELD_ID ] ) ) 
-		: '';
-	$product_type_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID ] ) ) 
-		: '';
-	$product_details_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID ] ) ) 
-		: '';
-	$manufactured_by_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID ] ) ) 
-		: '';
-	$return_reason_value = isset( $_POST[ $input_prefix . ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID ] ) 
-		? sanitize_text_field( wp_unslash( $_POST[ $input_prefix . ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID ] ) ) 
-		: '';
+	// Get submitted values from POST using helper function
+	$state_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_FIELD_ID );
+	$store_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_STORE_NAME_FIELD_ID );
+	$brand_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_BRAND_FIELD_ID );
+	$form_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_FORM_FIELD_ID );
+	$product_type_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID );
+	$product_details_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID );
+	$manufactured_by_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID );
+	$return_reason_value = once_gf_populate_get_post_value( ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID );
 
 	// Repopulate each AJAX field with choices based on dependencies
 	foreach ( $form['fields'] as &$field ) {
