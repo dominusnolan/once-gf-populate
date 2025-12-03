@@ -23,6 +23,13 @@ define( 'ONCE_GF_POPULATE_CPT', 'retail_customers' );
 define( 'ONCE_GF_POPULATE_ACF_FIELD', 'state' );
 define( 'ONCE_GF_POPULATE_MAX_STORES', 500 );
 
+// --- BRAND FIELD ADDITIONS ---
+define( 'ONCE_GF_POPULATE_BRAND_FIELD_ID', 10 );
+define( 'ONCE_GF_POPULATE_PRODUCTS_CPT', 'products' );
+define( 'ONCE_GF_POPULATE_PRODUCT_STATE_ACF', 'product_state' );
+define( 'ONCE_GF_POPULATE_PRODUCT_BRAND_TAX', 'product_brand' );
+define( 'ONCE_GF_POPULATE_MAX_PRODUCTS', 500 );
+
 /**
  * Fetch unique state values from CPT retail_customers via ACF/meta.
  *
@@ -154,7 +161,7 @@ add_shortcode( 'once_gf_states', function () {
 } );
 
 /**
- * Enqueue frontend script for AJAX store name population.
+ * Enqueue frontend script for AJAX store name and brand population.
  */
 add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( ! is_admin() ) {
@@ -180,6 +187,7 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 				'formId'         => ONCE_GF_POPULATE_FORM_ID,
 				'stateFieldId'   => ONCE_GF_POPULATE_FIELD_ID,
 				'storeFieldId'   => ONCE_GF_POPULATE_STORE_NAME_FIELD_ID,
+				'brandFieldId'   => ONCE_GF_POPULATE_BRAND_FIELD_ID, // <-- ADDED
 			)
 		);
 	}
@@ -253,7 +261,86 @@ add_action( 'wp_ajax_once_gf_populate_get_stores', 'once_gf_populate_ajax_get_st
 add_action( 'wp_ajax_nopriv_once_gf_populate_get_stores', 'once_gf_populate_ajax_get_stores' );
 
 /**
- * Initialize Store Name field with placeholder on form render.
+ * AJAX handler to fetch brands (taxonomy "product_brand") by state, from products CPT and product_state taxonomy.
+ * Returns brands with Term name as value and label.
+ */
+function once_gf_populate_ajax_get_brands() {
+	nocache_headers();
+
+	// Verify nonce
+	if (
+		! isset( $_POST['nonce'] )
+		|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'once_gf_populate_nonce' )
+	) {
+		wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+		return;
+	}
+
+	// Get and sanitize state parameter
+	if ( ! isset( $_POST['state'] ) ) {
+		wp_send_json_error( array( 'message' => 'Missing state parameter' ) );
+		return;
+	}
+
+	$state = sanitize_text_field( wp_unslash( $_POST['state'] ) );
+
+	if ( empty( $state ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Get term object for product_state taxonomy
+	$product_state_term = get_term_by( 'name', $state, ONCE_GF_POPULATE_PRODUCT_STATE_ACF );
+	if ( ! $product_state_term || is_wp_error( $product_state_term ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Query products that have this state
+	$args = array(
+		'post_type'      => ONCE_GF_POPULATE_PRODUCTS_CPT,
+		'post_status'    => 'publish',
+		'posts_per_page' => ONCE_GF_POPULATE_MAX_PRODUCTS,
+		'tax_query'      => array(
+			array(
+				'taxonomy' => ONCE_GF_POPULATE_PRODUCT_STATE_ACF,
+				'field'    => 'term_id',
+				'terms'    => $product_state_term->term_id,
+			),
+		),
+		'fields'         => 'ids',
+	);
+
+	$products_query = new WP_Query( $args );
+
+	$brand_names = array();
+
+	if ( $products_query->have_posts() ) {
+		foreach ( $products_query->posts as $product_id ) {
+			$brands = wp_get_post_terms( $product_id, ONCE_GF_POPULATE_PRODUCT_BRAND_TAX );
+			foreach ( $brands as $brand ) {
+				if ( is_object( $brand ) && $brand->name ) {
+					$brand_names[ $brand->name ] = true;
+				}
+			}
+		}
+	}
+
+	$choices = array();
+	foreach ( array_keys( $brand_names ) as $brand_name ) {
+		$choices[] = array(
+			'value' => $brand_name,
+			'text'  => $brand_name,
+		);
+	}
+
+	wp_send_json_success( array( 'choices' => $choices ) );
+}
+add_action( 'wp_ajax_once_gf_populate_get_brands', 'once_gf_populate_ajax_get_brands' );
+add_action( 'wp_ajax_nopriv_once_gf_populate_get_brands', 'once_gf_populate_ajax_get_brands' );
+
+/**
+ * Initialize Store Name field and Brand field with placeholder on form render.
  */
 add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( empty( $form['fields'] ) || ! is_array( $form['fields'] ) ) {
@@ -261,7 +348,21 @@ add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	}
 
 	foreach ( $form['fields'] as &$field ) {
+		// Store Name field placeholder
 		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_STORE_NAME_FIELD_ID ) ) {
+			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
+				$field->choices = array(
+					array(
+						'text'       => 'Please Select',
+						'value'      => '',
+						'isSelected' => false,
+					),
+				);
+				$field->placeholder = 'Please Select';
+			}
+		}
+		// Brand field placeholder
+		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_BRAND_FIELD_ID ) ) {
 			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
 				$field->choices = array(
 					array(
