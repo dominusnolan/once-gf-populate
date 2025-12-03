@@ -161,6 +161,27 @@ add_filter( 'gform_admin_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $fo
 } );
 
 /**
+ * Bypass validation for AJAX-populated select fields.
+ * This prevents "Invalid selection" errors for dynamically populated dropdowns.
+ */
+add_filter( 'gform_field_validation_' . ONCE_GF_POPULATE_FORM_ID, function ( $result, $value, $form, $field ) {
+	$skip_validation = array(
+		intval( ONCE_GF_POPULATE_STORE_NAME_FIELD_ID ),
+		intval( ONCE_GF_POPULATE_BRAND_FIELD_ID ),
+		intval( ONCE_GF_POPULATE_FORM_FIELD_ID ),
+		intval( ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID ),
+		intval( ONCE_GF_POPULATE_PRODUCT_DETAILS_FIELD_ID ),
+		intval( ONCE_GF_POPULATE_MANUFACTURED_BY_FIELD_ID ),
+		intval( ONCE_GF_POPULATE_RETURN_REASON_FIELD_ID ),
+	);
+	if ( in_array( intval( $field->id ), $skip_validation ) ) {
+		$result['is_valid'] = true;
+		$result['message'] = '';
+	}
+	return $result;
+}, 10, 4 );
+
+/**
  * Core function to inject choices into the target field.
  *
  * @param array $form GF form array.
