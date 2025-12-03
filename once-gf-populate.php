@@ -26,12 +26,13 @@ define( 'ONCE_GF_POPULATE_MAX_STORES', 500 );
 // --- PRODUCT/BRAND additions ---
 define( 'ONCE_GF_POPULATE_BRAND_FIELD_ID', 10 );
 define( 'ONCE_GF_POPULATE_FORM_FIELD_ID', 11 );
+define( 'ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID', 12 );
 define( 'ONCE_GF_POPULATE_PRODUCTS_CPT', 'products' );
 define( 'ONCE_GF_POPULATE_PRODUCT_STATE_ACF', 'product_state' );
 define( 'ONCE_GF_POPULATE_PRODUCT_BRAND_TAX', 'product_brand' );
 define( 'ONCE_GF_POPULATE_PRODUCT_FORM_TAX', 'product_form' );
+define( 'ONCE_GF_POPULATE_PRODUCT_TYPE_TAX', 'product_type' );
 define( 'ONCE_GF_POPULATE_MAX_PRODUCTS', 500 );
-
 
 /**
  * Fetch unique state values from CPT retail_customers via ACF/meta.
@@ -190,7 +191,9 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 				'formId'         => ONCE_GF_POPULATE_FORM_ID,
 				'stateFieldId'   => ONCE_GF_POPULATE_FIELD_ID,
 				'storeFieldId'   => ONCE_GF_POPULATE_STORE_NAME_FIELD_ID,
-				'brandFieldId'   => ONCE_GF_POPULATE_BRAND_FIELD_ID, // <-- ADDED
+				'brandFieldId'   => ONCE_GF_POPULATE_BRAND_FIELD_ID,
+				'formFieldId'    => ONCE_GF_POPULATE_FORM_FIELD_ID,
+				'productTypeFieldId' => ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID,
 			)
 		);
 	}
@@ -343,46 +346,9 @@ add_action( 'wp_ajax_once_gf_populate_get_brands', 'once_gf_populate_ajax_get_br
 add_action( 'wp_ajax_nopriv_once_gf_populate_get_brands', 'once_gf_populate_ajax_get_brands' );
 
 /**
- * Initialize Store Name field and Brand field with placeholder on form render.
+ * AJAX handler to fetch forms (taxonomy "product_form") by brand and state, from products CPT using product_state and product_brand taxonomy.
+ * Returns forms with Term name as value and label.
  */
-add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
-	if ( empty( $form['fields'] ) || ! is_array( $form['fields'] ) ) {
-		return $form;
-	}
-
-	foreach ( $form['fields'] as &$field ) {
-		// Store Name field placeholder
-		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_STORE_NAME_FIELD_ID ) ) {
-			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
-				$field->choices = array(
-					array(
-						'text'       => 'Please Select',
-						'value'      => '',
-						'isSelected' => false,
-					),
-				);
-				$field->placeholder = 'Please Select';
-			}
-		}
-		// Brand field placeholder
-		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_BRAND_FIELD_ID ) ) {
-			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
-				$field->choices = array(
-					array(
-						'text'       => 'Please Select',
-						'value'      => '',
-						'isSelected' => false,
-					),
-				);
-				$field->placeholder = 'Please Select';
-			}
-		}
-	}
-
-	return $form;
-}, 5 );
-
-
 function once_gf_populate_ajax_get_forms() {
 	nocache_headers();
 
@@ -452,36 +418,92 @@ add_action( 'wp_ajax_nopriv_once_gf_populate_get_forms', 'once_gf_populate_ajax_
 
 
 /**
- * Enqueue frontend script for AJAX population.
+ * AJAX handler to fetch product types (taxonomy "product_type") by brand, state, and form from products CPT.
+ * Returns product types with Term name as value and label.
  */
-add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
-	if ( ! is_admin() ) {
-		$script_url = plugin_dir_url( __FILE__ ) . 'once-gf-populate.js';
-		$script_path = plugin_dir_path( __FILE__ ) . 'once-gf-populate.js';
-		$script_mtime = file_exists( $script_path ) ? filemtime( $script_path ) : false;
-		$script_version = ( false !== $script_mtime ) ? $script_mtime : '1.0.0';
-		wp_enqueue_script(
-			'once-gf-populate-ajax', $script_url,
-			array( 'jquery' ), $script_version, true
-		);
-		wp_localize_script(
-			'once-gf-populate-ajax', 'onceGfPopulate',
+function once_gf_populate_ajax_get_product_types() {
+	nocache_headers();
+
+	// Security check
+	if (
+		! isset( $_POST['nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'once_gf_populate_nonce' )
+	) {
+		wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+		return;
+	}
+
+	$brand = isset( $_POST['brand'] ) ? sanitize_text_field( wp_unslash( $_POST['brand'] ) ) : '';
+	$state = isset( $_POST['state'] ) ? sanitize_text_field( wp_unslash( $_POST['state'] ) ) : '';
+	$form  = isset( $_POST['form'] )  ? sanitize_text_field( wp_unslash( $_POST['form'] ) )  : '';
+
+	if ( empty( $brand ) || empty( $state ) || empty( $form ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Lookup term objects
+	$state_term = get_term_by( 'name', $state, ONCE_GF_POPULATE_PRODUCT_STATE_ACF );
+	if ( ! $state_term || is_wp_error( $state_term ) ) {
+		wp_send_json_success( array( 'choices' => array() ) );
+		return;
+	}
+
+	// Query products that match taxonomies
+	$args = array(
+		'post_type' => ONCE_GF_POPULATE_PRODUCTS_CPT,
+		'post_status' => 'publish',
+		'posts_per_page' => ONCE_GF_POPULATE_MAX_PRODUCTS,
+		'tax_query' => array(
+			'relation' => 'AND',
 			array(
-				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
-				'nonce'          => wp_create_nonce( 'once_gf_populate_nonce' ),
-				'formId'         => ONCE_GF_POPULATE_FORM_ID,
-				'stateFieldId'   => ONCE_GF_POPULATE_FIELD_ID,
-				'storeFieldId'   => ONCE_GF_POPULATE_STORE_NAME_FIELD_ID,
-				'brandFieldId'   => ONCE_GF_POPULATE_BRAND_FIELD_ID,
-				'formFieldId'    => ONCE_GF_POPULATE_FORM_FIELD_ID,
-			)
+				'taxonomy' => ONCE_GF_POPULATE_PRODUCT_STATE_ACF,
+				'field'    => 'term_id',
+				'terms'    => $state_term->term_id,
+			),
+			array(
+				'taxonomy' => ONCE_GF_POPULATE_PRODUCT_BRAND_TAX,
+				'field'    => 'name',
+				'terms'    => $brand,
+			),
+			array(
+				'taxonomy' => ONCE_GF_POPULATE_PRODUCT_FORM_TAX,
+				'field'    => 'name',
+				'terms'    => $form,
+			),
+		),
+		'fields' => 'ids',
+	);
+
+	$query = new WP_Query( $args );
+	$type_names = array();
+
+	if ( $query->have_posts() ) {
+		foreach ( $query->posts as $product_id ) {
+			$types = wp_get_post_terms( $product_id, ONCE_GF_POPULATE_PRODUCT_TYPE_TAX );
+			foreach ( $types as $type ) {
+				if ( is_object( $type ) && $type->name ) {
+					$type_names[ $type->name ] = true;
+				}
+			}
+		}
+	}
+
+	$choices = array();
+	foreach ( array_keys( $type_names ) as $type_name ) {
+		$choices[] = array(
+			'value' => $type_name,
+			'text'  => $type_name,
 		);
 	}
-}, 10, 1 );
 
+	wp_send_json_success( array( 'choices' => $choices ) );
+}
+add_action( 'wp_ajax_once_gf_populate_get_product_types', 'once_gf_populate_ajax_get_product_types' );
+add_action( 'wp_ajax_nopriv_once_gf_populate_get_product_types', 'once_gf_populate_ajax_get_product_types' );
 
 /**
- * Initialize Store Name, Brand, and Form fields with placeholder on form render
+ * Initialize Store Name, Brand, Form, and Product Type fields with placeholder on form render
  */
 add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( empty( $form['fields'] ) || ! is_array( $form['fields'] ) ) return $form;
@@ -490,6 +512,7 @@ add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 		if ( intval( $field->id ) === intval( ONCE_GF_POPULATE_STORE_NAME_FIELD_ID )
 			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_BRAND_FIELD_ID )
 			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_FORM_FIELD_ID )
+			|| intval( $field->id ) === intval( ONCE_GF_POPULATE_PRODUCT_TYPE_FIELD_ID )
 		) {
 			if ( isset( $field->type ) && in_array( $field->type, array( 'select', 'multiselect' ), true ) ) {
 				$field->choices = array(

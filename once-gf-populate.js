@@ -1,6 +1,6 @@
 /**
- * Frontend AJAX handler for Store Name, Brand, and Form field population.
- * Listens to State and Brand field changes and updates dropdowns via AJAX.
+ * Frontend AJAX handler for Store Name, Brand, Form, and Product Type field population.
+ * Listens to State, Brand, and Form field changes and updates dropdowns via AJAX.
  */
 (function ($) {
 	'use strict';
@@ -14,11 +14,13 @@
 		var storeFieldId = config.storeFieldId;
 		var brandFieldId = config.brandFieldId;
 		var formFieldId = config.formFieldId;
+		var productTypeFieldId = config.productTypeFieldId;
 
 		var stateFieldSelector = '#input_' + formId + '_' + stateFieldId;
 		var storeFieldSelector = '#input_' + formId + '_' + storeFieldId;
 		var brandFieldSelector = '#input_' + formId + '_' + brandFieldId;
 		var formFieldSelector = '#input_' + formId + '_' + formFieldId;
+		var productTypeFieldSelector = '#input_' + formId + '_' + productTypeFieldId;
 
 		function updateStoreField(choices) {
 			var $storeField = $(storeFieldSelector);
@@ -66,6 +68,22 @@
 				});
 			}
 			$formField.trigger('change');
+		}
+
+		function updateProductTypeField(choices) {
+			var $productTypeField = $(productTypeFieldSelector);
+			if ($productTypeField.length === 0) return;
+			$productTypeField.empty();
+			$productTypeField.append($('<option>', {value: '', text: 'Please Select'}));
+			if (choices && choices.length > 0) {
+				$.each(choices, function(_, choice) {
+					$productTypeField.append($('<option>', {
+						value: choice.value,
+						text: choice.text
+					}));
+				});
+			}
+			$productTypeField.trigger('change');
 		}
 
 		function fetchStores(state) {
@@ -144,18 +162,59 @@
 			});
 		}
 
+		function fetchProductTypes(brand, state, form) {
+			if (!brand || !state || !form) {
+				updateProductTypeField([]);
+				return;
+			}
+			$.ajax({
+				url: config.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'once_gf_populate_get_product_types',
+					nonce: config.nonce,
+					brand: brand,
+					state: state,
+					form: form
+				},
+				cache: false,
+				success: function(response) {
+					if (response.success && response.data && response.data.choices) {
+						updateProductTypeField(response.data.choices);
+					} else {
+						updateProductTypeField([]);
+					}
+				},
+				error: function () {
+					updateProductTypeField([]);
+				}
+			});
+		}
+
 		$(document).on('change', stateFieldSelector, function () {
 			var selectedState = $(this).val();
 			var selectedBrand = $(brandFieldSelector).val();
+			var selectedForm = $(formFieldSelector).val();
 			fetchStores(selectedState);
 			fetchBrands(selectedState);
 			fetchForms(selectedBrand, selectedState);
+			updateProductTypeField([]); // Reset Product Type
 		});
 
 		$(document).on('change', brandFieldSelector, function () {
 			var selectedBrand = $(this).val();
 			var selectedState = $(stateFieldSelector).val();
+			var selectedForm = $(formFieldSelector).val();
 			fetchForms(selectedBrand, selectedState);
+			updateProductTypeField([]); // Reset Product Type
+		});
+
+		// When "Form" changes, update Product Type
+		$(document).on('change', formFieldSelector, function () {
+			var selectedForm = $(this).val();
+			var selectedState = $(stateFieldSelector).val();
+			var selectedBrand = $(brandFieldSelector).val();
+			fetchProductTypes(selectedBrand, selectedState, selectedForm);
 		});
 	});
 })(jQuery);
