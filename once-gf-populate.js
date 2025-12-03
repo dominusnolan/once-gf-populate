@@ -44,8 +44,11 @@
 			var $storeField = $(storeFieldSelector);
 			if ($storeField.length === 0) return;
 			
+			// Track if we're in preserve mode (even if value is empty)
+			var isPreserving = (preserveValue !== undefined);
+			
 			// Determine which value to restore
-			var previousValue = preserveValue !== undefined ? preserveValue : $storeField.data('selected') || $storeField.val();
+			var previousValue = isPreserving ? preserveValue : ($storeField.data('selected') || $storeField.val());
 			
 			hideLoading($storeField);
 			$storeField.empty();
@@ -68,8 +71,8 @@
 				$storeField.data('selected', '');
 			}
 			
-			// Don't trigger change if we're restoring a value to prevent cascading resets
-			if (!preserveValue) {
+			// Don't trigger change if we're in preserving mode to prevent cascading resets
+			if (!isPreserving) {
 				$storeField.trigger('change');
 			}
 		}
@@ -78,8 +81,11 @@
 			var $brandField = $(brandFieldSelector);
 			if ($brandField.length === 0) return;
 			
+			// Track if we're in preserve mode (even if value is empty)
+			var isPreserving = (preserveValue !== undefined);
+			
 			// Determine which value to restore
-			var previousValue = preserveValue !== undefined ? preserveValue : $brandField.data('selected') || $brandField.val();
+			var previousValue = isPreserving ? preserveValue : ($brandField.data('selected') || $brandField.val());
 			
 			hideLoading($brandField);
 			$brandField.empty();
@@ -102,8 +108,8 @@
 				$brandField.data('selected', '');
 			}
 			
-			// Don't trigger change if we're restoring a value to prevent cascading resets
-			if (!preserveValue) {
+			// Don't trigger change if we're in preserving mode to prevent cascading resets
+			if (!isPreserving) {
 				$brandField.trigger('change');
 			}
 		}
@@ -112,8 +118,11 @@
 			var $formField = $(formFieldSelector);
 			if ($formField.length === 0) return;
 			
+			// Track if we're in preserve mode (even if value is empty)
+			var isPreserving = (preserveValue !== undefined);
+			
 			// Determine which value to restore
-			var previousValue = preserveValue !== undefined ? preserveValue : $formField.data('selected') || $formField.val();
+			var previousValue = isPreserving ? preserveValue : ($formField.data('selected') || $formField.val());
 			
 			hideLoading($formField);
 			$formField.empty();
@@ -136,8 +145,8 @@
 				$formField.data('selected', '');
 			}
 			
-			// Don't trigger change if we're restoring a value to prevent cascading resets
-			if (!preserveValue) {
+			// Don't trigger change if we're in preserving mode to prevent cascading resets
+			if (!isPreserving) {
 				$formField.trigger('change');
 			}
 		}
@@ -146,8 +155,11 @@
 			var $productTypeField = $(productTypeFieldSelector);
 			if ($productTypeField.length === 0) return;
 			
+			// Track if we're in preserve mode (even if value is empty)
+			var isPreserving = (preserveValue !== undefined);
+			
 			// Determine which value to restore
-			var previousValue = preserveValue !== undefined ? preserveValue : $productTypeField.data('selected') || $productTypeField.val();
+			var previousValue = isPreserving ? preserveValue : ($productTypeField.data('selected') || $productTypeField.val());
 			
 			hideLoading($productTypeField);
 			$productTypeField.empty();
@@ -170,8 +182,8 @@
 				$productTypeField.data('selected', '');
 			}
 			
-			// Don't trigger change if we're restoring a value to prevent cascading resets
-			if (!preserveValue) {
+			// Don't trigger change if we're in preserving mode to prevent cascading resets
+			if (!isPreserving) {
 				$productTypeField.trigger('change');
 			}
 		}
@@ -180,8 +192,11 @@
 			var $productDetailsField = $(productDetailsFieldSelector);
 			if ($productDetailsField.length === 0) return;
 			
+			// Track if we're in preserve mode (even if value is empty)
+			var isPreserving = (preserveValue !== undefined);
+			
 			// Determine which value to restore
-			var previousValue = preserveValue !== undefined ? preserveValue : $productDetailsField.data('selected') || $productDetailsField.val();
+			var previousValue = isPreserving ? preserveValue : ($productDetailsField.data('selected') || $productDetailsField.val());
 			
 			hideLoading($productDetailsField);
 			$productDetailsField.empty();
@@ -204,8 +219,8 @@
 				$productDetailsField.data('selected', '');
 			}
 			
-			// Don't trigger change if we're restoring a value to prevent cascading resets
-			if (!preserveValue) {
+			// Don't trigger change if we're in preserving mode to prevent cascading resets
+			if (!isPreserving) {
 				$productDetailsField.trigger('change');
 			}
 		}
@@ -214,8 +229,11 @@
 			var $manufacturedByField = $(manufacturedByFieldSelector);
 			if ($manufacturedByField.length === 0) return;
 			
+			// Track if we're in preserve mode (even if value is empty)
+			var isPreserving = (preserveValue !== undefined);
+			
 			// Determine which value to restore
-			var previousValue = preserveValue !== undefined ? preserveValue : $manufacturedByField.data('selected') || $manufacturedByField.val();
+			var previousValue = isPreserving ? preserveValue : ($manufacturedByField.data('selected') || $manufacturedByField.val());
 			
 			hideLoading($manufacturedByField);
 			$manufacturedByField.empty();
@@ -238,8 +256,8 @@
 				$manufacturedByField.data('selected', '');
 			}
 			
-			// Don't trigger change if we're restoring a value to prevent cascading resets
-			if (!preserveValue) {
+			// Don't trigger change if we're in preserving mode to prevent cascading resets
+			if (!isPreserving) {
 				$manufacturedByField.trigger('change');
 			}
 		}
@@ -248,8 +266,11 @@
 			var $returnReasonField = $(returnReasonFieldSelector);
 			if ($returnReasonField.length === 0) return;
 			
+			// Track if we're in preserve mode (even if value is empty)
+			var isPreserving = (preserveValue !== undefined);
+			
 			// Determine which value to restore
-			var previousValue = preserveValue !== undefined ? preserveValue : $returnReasonField.data('selected') || $returnReasonField.val();
+			var previousValue = isPreserving ? preserveValue : ($returnReasonField.data('selected') || $returnReasonField.val());
 			
 			hideLoading($returnReasonField);
 			$returnReasonField.empty();
@@ -272,8 +293,8 @@
 				$returnReasonField.data('selected', '');
 			}
 			
-			// Don't trigger change if we're restoring a value to prevent cascading resets
-			if (!preserveValue) {
+			// Don't trigger change if we're in preserving mode to prevent cascading resets
+			if (!isPreserving) {
 				$returnReasonField.trigger('change');
 			}
 		}
