@@ -1,6 +1,6 @@
 /**
- * Frontend AJAX handler for Store Name, Brand, Form, and Product Type field population.
- * Listens to State, Brand, and Form field changes and updates dropdowns via AJAX.
+ * Frontend AJAX handler for Store Name, Brand, Form, Product Type, and Product Details field population.
+ * Listens to State, Brand, Form, and Product Type field changes and updates dropdowns via AJAX.
  */
 (function ($) {
 	'use strict';
@@ -15,12 +15,14 @@
 		var brandFieldId = config.brandFieldId;
 		var formFieldId = config.formFieldId;
 		var productTypeFieldId = config.productTypeFieldId;
+		var productDetailsFieldId = config.productDetailsFieldId;
 
 		var stateFieldSelector = '#input_' + formId + '_' + stateFieldId;
 		var storeFieldSelector = '#input_' + formId + '_' + storeFieldId;
 		var brandFieldSelector = '#input_' + formId + '_' + brandFieldId;
 		var formFieldSelector = '#input_' + formId + '_' + formFieldId;
 		var productTypeFieldSelector = '#input_' + formId + '_' + productTypeFieldId;
+		var productDetailsFieldSelector = '#input_' + formId + '_' + productDetailsFieldId;
 
 		function updateStoreField(choices) {
 			var $storeField = $(storeFieldSelector);
@@ -84,6 +86,22 @@
 				});
 			}
 			$productTypeField.trigger('change');
+		}
+
+		function updateProductDetailsField(choices) {
+			var $productDetailsField = $(productDetailsFieldSelector);
+			if ($productDetailsField.length === 0) return;
+			$productDetailsField.empty();
+			$productDetailsField.append($('<option>', {value: '', text: 'Please Select'}));
+			if (choices && choices.length > 0) {
+				$.each(choices, function(_, choice) {
+					$productDetailsField.append($('<option>', {
+						value: choice.value,
+						text: choice.text
+					}));
+				});
+			}
+			$productDetailsField.trigger('change');
 		}
 
 		function fetchStores(state) {
@@ -191,6 +209,36 @@
 			});
 		}
 
+		function fetchProductDetails(brand, state, form, productType) {
+			if (!brand || !state || !form || !productType) {
+				updateProductDetailsField([]);
+				return;
+			}
+			$.ajax({
+				url: config.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'once_gf_populate_get_product_details',
+					nonce: config.nonce,
+					brand: brand,
+					state: state,
+					form: form,
+					product_type: productType
+				},
+				cache: false,
+				success: function(response) {
+					if (response.success && response.data && response.data.choices) {
+						updateProductDetailsField(response.data.choices);
+					} else {
+						updateProductDetailsField([]);
+					}
+				},
+				error: function () {
+					updateProductDetailsField([]);
+				}
+			});
+		}
+
 		$(document).on('change', stateFieldSelector, function () {
 			var selectedState = $(this).val();
 			var selectedBrand = $(brandFieldSelector).val();
@@ -199,6 +247,7 @@
 			fetchBrands(selectedState);
 			fetchForms(selectedBrand, selectedState);
 			updateProductTypeField([]); // Reset Product Type
+			updateProductDetailsField([]); // Reset Product Details
 		});
 
 		$(document).on('change', brandFieldSelector, function () {
@@ -207,6 +256,7 @@
 			var selectedForm = $(formFieldSelector).val();
 			fetchForms(selectedBrand, selectedState);
 			updateProductTypeField([]); // Reset Product Type
+			updateProductDetailsField([]); // Reset Product Details
 		});
 
 		// When "Form" changes, update Product Type
@@ -215,6 +265,16 @@
 			var selectedState = $(stateFieldSelector).val();
 			var selectedBrand = $(brandFieldSelector).val();
 			fetchProductTypes(selectedBrand, selectedState, selectedForm);
+			updateProductDetailsField([]); // Reset Product Details
+		});
+
+		// When "Product Type" changes, update Product Details
+		$(document).on('change', productTypeFieldSelector, function () {
+			var selectedProductType = $(this).val();
+			var selectedState = $(stateFieldSelector).val();
+			var selectedBrand = $(brandFieldSelector).val();
+			var selectedForm = $(formFieldSelector).val();
+			fetchProductDetails(selectedBrand, selectedState, selectedForm, selectedProductType);
 		});
 	});
 })(jQuery);
