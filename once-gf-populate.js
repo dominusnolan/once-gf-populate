@@ -359,6 +359,7 @@
 			fetchForms(selectedBrand, selectedState);
 			updateProductTypeField([]); // Reset Product Type
 			updateProductDetailsField([]); // Reset Product Details
+			updateReturnReasonField([]); // Reset Return Reason
 		});
 
 		$(document).on('change', brandFieldSelector, function () {
@@ -368,6 +369,7 @@
 			fetchForms(selectedBrand, selectedState);
 			updateProductTypeField([]); // Reset Product Type
 			updateProductDetailsField([]); // Reset Product Details
+			updateReturnReasonField([]); // Reset Return Reason
 		});
 
 		// When "Form" changes, update Product Type and Return Reason
