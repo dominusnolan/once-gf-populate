@@ -28,6 +28,10 @@
 		var manufacturedByFieldSelector = '#input_' + formId + '_' + manufacturedByFieldId;
 		var returnReasonFieldSelector = '#input_' + formId + '_' + returnReasonFieldId;
 
+		// Configuration constants
+		var MAX_FORM_READY_ATTEMPTS = 20; // Max attempts for DOM readiness check
+		var FORM_READY_CHECK_INTERVAL = 100; // milliseconds between checks
+		
 		// localStorage key for storing field selections
 		var localStorageKey = 'onceGfPopulate_form_' + formId + '_selections';
 
@@ -743,9 +747,6 @@
 	// Restore selections from localStorage on initial page load
 	// Wait for form to be fully rendered with a reasonable timeout
 	// Check if state field is already populated before restoring
-	var MAX_FORM_READY_ATTEMPTS = 20; // Max 2 seconds
-	var FORM_READY_CHECK_INTERVAL = 100; // milliseconds
-	
 	function waitForFormReady(callback, maxAttempts) {
 		maxAttempts = maxAttempts || MAX_FORM_READY_ATTEMPTS;
 		var attempts = 0;
@@ -759,7 +760,11 @@
 				attempts++;
 				setTimeout(checkReady, FORM_READY_CHECK_INTERVAL);
 			} else {
-				// Fallback: run anyway after max attempts
+				// Fallback: run anyway after max attempts (form should be ready by now)
+				// This ensures restoration happens even if DOM checks fail
+				if (console && console.warn) {
+					console.warn('Once GF Populate: Form readiness check timed out, attempting restoration anyway');
+				}
 				callback();
 			}
 		}
@@ -916,7 +921,8 @@
 
 		// Clear localStorage on successful form submission
 		$(document).on('gform_confirmation_loaded', function(event, confirmedFormId) {
-			if (parseInt(confirmedFormId) === parseInt(config.formId)) {
+			// Compare as strings to handle both string and number types
+			if (String(confirmedFormId) === String(config.formId)) {
 				clearSelections();
 			}
 		});
