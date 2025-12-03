@@ -1,6 +1,6 @@
 /**
- * Frontend AJAX handler for Store Name, Brand, Form, Product Type, and Product Details field population.
- * Listens to State, Brand, Form, and Product Type field changes and updates dropdowns via AJAX.
+ * Frontend AJAX handler for Store Name, Brand, Form, Product Type, Product Details, Manufactured By, and Return Reason field population.
+ * Listens to State, Brand, Form, and Product Type field changes and updates dropdowns via AJAX with loading indicators.
  */
 (function ($) {
 	'use strict';

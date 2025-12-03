@@ -765,7 +765,7 @@ add_action( 'wp_ajax_once_gf_populate_get_return_reason', 'once_gf_populate_ajax
 add_action( 'wp_ajax_nopriv_once_gf_populate_get_return_reason', 'once_gf_populate_ajax_get_return_reason' );
 
 /**
- * Initialize Store Name, Brand, Form, Product Type, and Product Details fields with placeholder on form render
+ * Initialize Store Name, Brand, Form, Product Type, Product Details, Manufactured By, and Return Reason fields with placeholder on form render
  */
 add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( empty( $form['fields'] ) || ! is_array( $form['fields'] ) ) return $form;
