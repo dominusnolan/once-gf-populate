@@ -673,6 +673,8 @@ function once_gf_populate_ajax_get_manufactured_by() {
 		}
 	}
 
+	wp_reset_postdata();
+
 	$choices = array();
 	foreach ( array_keys( $manufactured_by_values ) as $mfg_value ) {
 		$choices[] = array(
