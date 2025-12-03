@@ -669,54 +669,48 @@ function once_gf_populate_ajax_get_manufactured_by() {
 		return;
 	}
 
-	// Query products that have this state
-	$args = array(
-		'post_type'      => ONCE_GF_POPULATE_PRODUCTS_CPT,
-		'post_status'    => 'publish',
-		'posts_per_page' => ONCE_GF_POPULATE_MAX_PRODUCTS,
-		'tax_query'      => array(
-			array(
-				'taxonomy' => ONCE_GF_POPULATE_PRODUCT_STATE_ACF,
-				'field'    => 'term_id',
-				'terms'    => $state_term->term_id,
-			),
-		),
-		'fields' => 'ids',
-	);
+	// Get ACF field 'state_mfg' from taxonomy term object
+	$state_mfg = null;
 
-	$query = new WP_Query( $args );
-	$manufactured_by_values = array();
-
-	if ( $query->have_posts() ) {
-		foreach ( $query->posts as $product_id ) {
-			$state_mfg = null;
-
-			if ( function_exists( 'get_field' ) ) {
-				$state_mfg = get_field( 'state_mfg', $product_id );
-			}
-
-			if ( ! $state_mfg ) {
-				$state_mfg = get_post_meta( $product_id, 'state_mfg', true );
-			}
-
-			if ( is_string( $state_mfg ) ) {
-				$state_mfg = trim( $state_mfg );
-			}
-
-			if ( ! empty( $state_mfg ) && is_string( $state_mfg ) ) {
-				$manufactured_by_values[ $state_mfg ] = true;
-			}
-		}
+	if ( function_exists( 'get_field' ) ) {
+		// For taxonomy term, the ACF field key is: {taxonomy}_{term_id}
+		$state_mfg = get_field( 'state_mfg', ONCE_GF_POPULATE_PRODUCT_STATE_ACF . '_' . $state_term->term_id );
 	}
 
-	wp_reset_postdata();
+	if ( ! $state_mfg ) {
+		$state_mfg = get_term_meta( $state_term->term_id, 'state_mfg', true );
+	}
 
 	$choices = array();
-	foreach ( array_keys( $manufactured_by_values ) as $mfg_value ) {
-		$choices[] = array(
-			'value' => $mfg_value,
-			'text'  => $mfg_value,
-		);
+
+	// Handle state_mfg as array or string
+	if ( is_array( $state_mfg ) && ! empty( $state_mfg ) ) {
+		foreach ( $state_mfg as $mfg ) {
+			if ( is_string( $mfg ) ) {
+				$mfg = trim( $mfg );
+				if ( ! empty( $mfg ) ) {
+					$choices[] = array(
+						'value' => $mfg,
+						'text'  => $mfg,
+					);
+				}
+			}
+		}
+	} elseif ( is_string( $state_mfg ) ) {
+		$state_mfg = trim( $state_mfg );
+		if ( ! empty( $state_mfg ) ) {
+			// Split by newlines or commas
+			$mfgs = preg_split( '/[\r\n,]+/', $state_mfg );
+			foreach ( $mfgs as $mfg ) {
+				$mfg = trim( $mfg );
+				if ( ! empty( $mfg ) ) {
+					$choices[] = array(
+						'value' => $mfg,
+						'text'  => $mfg,
+					);
+				}
+			}
+		}
 	}
 
 	wp_send_json_success( array( 'choices' => $choices ) );
