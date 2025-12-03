@@ -575,6 +575,9 @@ function once_gf_populate_ajax_get_product_details() {
 	if ( $query->have_posts() ) {
 		foreach ( $query->posts as $product_id ) {
 			$details = wp_get_post_terms( $product_id, ONCE_GF_POPULATE_PRODUCT_DETAILS_TAX );
+			if ( is_wp_error( $details ) ) {
+				continue;
+			}
 			foreach ( $details as $detail ) {
 				if ( is_object( $detail ) && $detail->name ) {
 					$details_names[ $detail->name ] = true;
