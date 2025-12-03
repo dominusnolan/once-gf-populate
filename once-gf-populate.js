@@ -294,11 +294,11 @@
 					if (response.success && response.data && response.data.choices) {
 						updateStoreField(response.data.choices, preserveValue);
 					} else {
-						updateStoreField([]);
+						updateStoreField([], preserveValue);
 					}
 				},
 				error: function () {
-					updateStoreField([]);
+					updateStoreField([], preserveValue);
 				}
 			});
 		}
@@ -319,11 +319,11 @@
 					if (response.success && response.data && response.data.choices) {
 						updateBrandField(response.data.choices, preserveValue);
 					} else {
-						updateBrandField([]);
+						updateBrandField([], preserveValue);
 					}
 				},
 				error: function () {
-					updateBrandField([]);
+					updateBrandField([], preserveValue);
 				}
 			});
 		}
@@ -348,11 +348,11 @@
 					if (response.success && response.data && response.data.choices) {
 						updateFormField(response.data.choices, preserveValue);
 					} else {
-						updateFormField([]);
+						updateFormField([], preserveValue);
 					}
 				},
 				error: function () {
-					updateFormField([]);
+					updateFormField([], preserveValue);
 				}
 			});
 		}
@@ -378,11 +378,11 @@
 					if (response.success && response.data && response.data.choices) {
 						updateProductTypeField(response.data.choices, preserveValue);
 					} else {
-						updateProductTypeField([]);
+						updateProductTypeField([], preserveValue);
 					}
 				},
 				error: function () {
-					updateProductTypeField([]);
+					updateProductTypeField([], preserveValue);
 				}
 			});
 		}
@@ -409,11 +409,11 @@
 					if (response.success && response.data && response.data.choices) {
 						updateProductDetailsField(response.data.choices, preserveValue);
 					} else {
-						updateProductDetailsField([]);
+						updateProductDetailsField([], preserveValue);
 					}
 				},
 				error: function () {
-					updateProductDetailsField([]);
+					updateProductDetailsField([], preserveValue);
 				}
 			});
 		}
@@ -434,11 +434,11 @@
 					if (response.success && response.data && response.data.choices) {
 						updateManufacturedByField(response.data.choices, preserveValue);
 					} else {
-						updateManufacturedByField([]);
+						updateManufacturedByField([], preserveValue);
 					}
 				},
 				error: function () {
-					updateManufacturedByField([]);
+					updateManufacturedByField([], preserveValue);
 				}
 			});
 		}
@@ -459,11 +459,11 @@
 					if (response.success && response.data && response.data.choices) {
 						updateReturnReasonField(response.data.choices, preserveValue);
 					} else {
-						updateReturnReasonField([]);
+						updateReturnReasonField([], preserveValue);
 					}
 				},
 				error: function () {
-					updateReturnReasonField([]);
+					updateReturnReasonField([], preserveValue);
 				}
 			});
 		}
