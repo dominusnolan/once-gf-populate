@@ -700,13 +700,10 @@
 				
 				if (savedForm) {
 					fetchReturnReason(savedForm, savedReturnReason);
+					fetchProductTypes(savedBrand, stateVal, savedForm, savedProductType);
 					
-					if (savedBrand && savedForm) {
-						fetchProductTypes(savedBrand, stateVal, savedForm, savedProductType);
-						
-						if (savedProductType) {
-							fetchProductDetails(savedBrand, stateVal, savedForm, savedProductType, savedProductDetails);
-						}
+					if (savedProductType) {
+						fetchProductDetails(savedBrand, stateVal, savedForm, savedProductType, savedProductDetails);
 					}
 				}
 			}
@@ -714,8 +711,30 @@
 	}
 
 	// Restore selections from localStorage on initial page load
-	// Wait a bit for form to be fully rendered
-	setTimeout(restoreSelectionsFromLocalStorage, 150);
+	// Wait for form to be fully rendered with a reasonable timeout
+	// Check if state field is already populated before restoring
+	function waitForFormReady(callback, maxAttempts) {
+		maxAttempts = maxAttempts || 20; // Max 2 seconds (20 * 100ms)
+		var attempts = 0;
+		
+		function checkReady() {
+			var $stateField = $(stateFieldSelector);
+			if ($stateField.length > 0 && $stateField.find('option').length > 1) {
+				// State field is ready with options
+				callback();
+			} else if (attempts < maxAttempts) {
+				attempts++;
+				setTimeout(checkReady, 100);
+			} else {
+				// Fallback: run anyway after max attempts
+				callback();
+			}
+		}
+		
+		checkReady();
+	}
+	
+	waitForFormReady(restoreSelectionsFromLocalStorage);
 
 	// On form error rerender, trigger cascading repopulation
 	function handleFormRerender() {
@@ -864,7 +883,10 @@
 
 		// Alternative: Clear on form submission page (if Gravity Forms redirects)
 		// This handles cases where confirmation is on a different page
-		if (window.location.search.indexOf('gf_page=preview') === -1) {
+		// Only check if URL contains form submission indicators
+		if (window.location.search.indexOf('gf_page=preview') === -1 && 
+		    (window.location.search.indexOf('gform_confirmation') !== -1 || 
+		     document.referrer.indexOf('gform_confirmation') !== -1)) {
 			// Check if we just submitted the form (looking for confirmation message)
 			if ($('.gform_confirmation_message').length > 0) {
 				clearSelections();
