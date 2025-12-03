@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Once GF Populate
- * Description: Pre-populate Gravity Forms fields from a custom post type (CPT) using taxonomy terms. Populates Form ID 7, Field ID 32 with unique "state" values from CPT "products", and dynamically populates Field ID 10 (Brand) based on selected state.
+ * Description: Pre-populate Gravity Forms fields from a custom post type (CPT) using ACF values. Example: Populate Form ID 7, Field ID 32 with unique "state" values from CPT "retail_customers".
  * Version: 1.0.0
  * Author: Once
  * Author URI: https://onceinteractive.com
@@ -18,13 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'ONCE_GF_POPULATE_FORM_ID', 7 );
 define( 'ONCE_GF_POPULATE_FIELD_ID', 32 );
-define( 'ONCE_GF_POPULATE_STORE_NAME_FIELD_ID', 10 );
-define( 'ONCE_GF_POPULATE_CPT', 'products' );
+define( 'ONCE_GF_POPULATE_STORE_NAME_FIELD_ID', 7 );
+define( 'ONCE_GF_POPULATE_CPT', 'retail_customers' );
 define( 'ONCE_GF_POPULATE_ACF_FIELD', 'state' );
 define( 'ONCE_GF_POPULATE_MAX_STORES', 500 );
 
 /**
- * Fetch unique state values from CPT products via ACF/meta.
+ * Fetch unique state values from CPT retail_customers via ACF/meta.
  *
  * @return array Unique, sorted list of state strings.
  */
@@ -79,12 +79,6 @@ function once_gf_populate_get_states() {
  */
 function once_gf_populate_build_choices( array $states ) {
 	$choices = array();
-
-	$choices[] = array(
-		'text'       => 'Please Select State',
-		'value'      => '',
-		'isSelected' => false,
-	);
 
 	foreach ( $states as $state ) {
 		$choices[] = array(
@@ -186,8 +180,8 @@ add_action( 'gform_enqueue_scripts_' . ONCE_GF_POPULATE_FORM_ID, function ( $for
 }, 10, 1 );
 
 /**
- * AJAX handler to fetch brands by state.
- * Returns unique product_brand term names for products in the selected product_state.
+ * AJAX handler to fetch stores by state.
+ * Returns stores with Post ID as value and decoded Post Title as label.
  */
 function once_gf_populate_ajax_get_stores() {
 	// Set no-cache headers
@@ -212,61 +206,39 @@ function once_gf_populate_ajax_get_stores() {
 		return;
 	}
 
-	// Resolve product_state term by name
-	$state_term = get_term_by( 'name', $state, 'product_state' );
-
-	if ( ! $state_term || is_wp_error( $state_term ) ) {
-		wp_send_json_success( array( 'choices' => array() ) );
-		return;
-	}
-
-	// Query products filtered by product_state taxonomy
+	// Query stores filtered by state
 	$args = array(
 		'post_type'      => ONCE_GF_POPULATE_CPT,
 		'post_status'    => 'publish',
 		'posts_per_page' => ONCE_GF_POPULATE_MAX_STORES,
-		'fields'         => 'ids',
-		'tax_query'      => array(
+		'orderby'        => 'title',
+		'order'          => 'ASC',
+		'meta_query'     => array(
 			array(
-				'taxonomy' => 'product_state',
-				'field'    => 'term_id',
-				'terms'    => $state_term->term_id,
+				'key'     => ONCE_GF_POPULATE_ACF_FIELD,
+				'value'   => $state,
+				'compare' => '=',
 			),
 		),
 	);
 
 	$query = new WP_Query( $args );
 
-	$brand_names = array();
+	$choices = array();
 
 	if ( $query->have_posts() ) {
-		foreach ( $query->posts as $post_id ) {
-			// Get product_brand terms for this product
-			$brand_terms = wp_get_post_terms( $post_id, 'product_brand', array( 'fields' => 'names' ) );
+		foreach ( $query->posts as $post ) {
+			// Decode HTML entities in post title
+			$decoded_title = html_entity_decode( $post->post_title, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 			
-			if ( ! is_wp_error( $brand_terms ) && ! empty( $brand_terms ) ) {
-				foreach ( $brand_terms as $brand_name ) {
-					$brand_names[] = $brand_name;
-				}
-			}
+			$choices[] = array(
+				'value' => $post->ID,
+				'text'  => $decoded_title,
+			);
 		}
 	}
 
 	wp_reset_postdata();
-
-	// Get unique brand names and sort naturally
-	$brand_names = array_unique( $brand_names );
-	natsort( $brand_names );
-	$brand_names = array_values( $brand_names );
-
-	// Build choices array
-	$choices = array();
-	foreach ( $brand_names as $brand_name ) {
-		$choices[] = array(
-			'value' => $brand_name,
-			'text'  => $brand_name,
-		);
-	}
 
 	wp_send_json_success( array( 'choices' => $choices ) );
 }
@@ -275,7 +247,7 @@ add_action( 'wp_ajax_once_gf_populate_get_stores', 'once_gf_populate_ajax_get_st
 add_action( 'wp_ajax_nopriv_once_gf_populate_get_stores', 'once_gf_populate_ajax_get_stores' );
 
 /**
- * Initialize Brand field with placeholder on form render.
+ * Initialize Store Name field with placeholder on form render.
  */
 add_filter( 'gform_pre_render_' . ONCE_GF_POPULATE_FORM_ID, function ( $form ) {
 	if ( empty( $form['fields'] ) || ! is_array( $form['fields'] ) ) {
