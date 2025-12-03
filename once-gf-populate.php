@@ -84,29 +84,36 @@ function once_gf_populate_get_states() {
 	$states = array_unique( $states );
 	
 	// Filter out states that don't have any products in the products CPT
+	// Use a single query to get all states that have products for efficiency
+	$product_args = array(
+		'post_type'      => ONCE_GF_POPULATE_PRODUCTS_CPT,
+		'post_status'    => 'publish',
+		'posts_per_page' => ONCE_GF_POPULATE_MAX_PRODUCTS,
+		'fields'         => 'ids',
+	);
+	
+	$product_query = new WP_Query( $product_args );
+	$states_with_products = array();
+	
+	if ( $product_query->have_posts() ) {
+		foreach ( $product_query->posts as $product_id ) {
+			$product_state_terms = wp_get_post_terms( $product_id, ONCE_GF_POPULATE_PRODUCT_STATE_ACF );
+			if ( ! is_wp_error( $product_state_terms ) && ! empty( $product_state_terms ) ) {
+				foreach ( $product_state_terms as $term ) {
+					if ( is_object( $term ) && isset( $term->name ) ) {
+						$states_with_products[ $term->name ] = true;
+					}
+				}
+			}
+		}
+	}
+	wp_reset_postdata();
+	
+	// Filter the original states list to only include those with products
 	$filtered_states = array();
 	foreach ( $states as $state ) {
-		$product_state_term = get_term_by( 'name', $state, ONCE_GF_POPULATE_PRODUCT_STATE_ACF );
-		if ( $product_state_term && ! is_wp_error( $product_state_term ) ) {
-			// Check if there's at least one product with this state
-			$product_args = array(
-				'post_type'      => ONCE_GF_POPULATE_PRODUCTS_CPT,
-				'post_status'    => 'publish',
-				'posts_per_page' => 1,
-				'tax_query'      => array(
-					array(
-						'taxonomy' => ONCE_GF_POPULATE_PRODUCT_STATE_ACF,
-						'field'    => 'term_id',
-						'terms'    => $product_state_term->term_id,
-					),
-				),
-				'fields'         => 'ids',
-			);
-			$product_query = new WP_Query( $product_args );
-			if ( $product_query->have_posts() ) {
-				$filtered_states[] = $state;
-			}
-			wp_reset_postdata();
+		if ( isset( $states_with_products[ $state ] ) ) {
+			$filtered_states[] = $state;
 		}
 	}
 	
