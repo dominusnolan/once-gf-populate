@@ -86,12 +86,9 @@
 		 * Check if there are any saved selections
 		 */
 		function hasSavedSelections(selections) {
-			for (var key in selections) {
-				if (selections.hasOwnProperty(key) && selections[key]) {
-					return true;
-				}
-			}
-			return false;
+			return Object.keys(selections).some(function(key) {
+				return selections[key];
+			});
 		}
 
 		/**
@@ -746,8 +743,11 @@
 	// Restore selections from localStorage on initial page load
 	// Wait for form to be fully rendered with a reasonable timeout
 	// Check if state field is already populated before restoring
+	var MAX_FORM_READY_ATTEMPTS = 20; // Max 2 seconds
+	var FORM_READY_CHECK_INTERVAL = 100; // milliseconds
+	
 	function waitForFormReady(callback, maxAttempts) {
-		maxAttempts = maxAttempts || 20; // Max 2 seconds (20 * 100ms)
+		maxAttempts = maxAttempts || MAX_FORM_READY_ATTEMPTS;
 		var attempts = 0;
 		
 		function checkReady() {
@@ -757,7 +757,7 @@
 				callback();
 			} else if (attempts < maxAttempts) {
 				attempts++;
-				setTimeout(checkReady, 100);
+				setTimeout(checkReady, FORM_READY_CHECK_INTERVAL);
 			} else {
 				// Fallback: run anyway after max attempts
 				callback();
@@ -915,8 +915,8 @@
 		});
 
 		// Clear localStorage on successful form submission
-		$(document).on('gform_confirmation_loaded', function(event, formId) {
-			if (parseInt(formId) === parseInt(config.formId)) {
+		$(document).on('gform_confirmation_loaded', function(event, confirmedFormId) {
+			if (parseInt(confirmedFormId) === parseInt(config.formId)) {
 				clearSelections();
 			}
 		});
